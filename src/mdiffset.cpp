@@ -1,19 +1,3 @@
-/*
- * Copyright (c) 2019 Joe Sawada
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 #include "ThreadPool.h"
 #include <cstdint>
 #include <cstdio>
@@ -42,6 +26,14 @@ struct DiffCover {
     // const int *begin_a;
     size_t size_n;
 
+    /**
+     * Constructs a DiffCover object with the given parameters.
+     *
+     * @param n The total number of elements.
+     * @param d The number of elements in the D-set.
+     * @param threshold The threshold for the number of differences between
+     * elements.
+     */
     DiffCover(int n, int d, int threshold)
         : n{n}, d{d}, threshold{threshold}, d_minus_1{d - 1},
           d_times_d_minus_1{d * (d - 1)}, n_minus_d{n - d},
@@ -56,7 +48,7 @@ struct DiffCover {
 
     //-------------------------------------------------------------
     /**
-     * Prints the generated set to stdout and exits.
+     * Prints the generated D-set to stdout.
      */
     void PrintD() const {
         // print a
@@ -69,6 +61,58 @@ struct DiffCover {
         return;
     }
 
+    /**
+     * GenD Function
+     *
+     * The GenD function is a recursive algorithm designed to generate
+     * difference covers, which are special sets of numbers used in various
+     * mathematical applications. This function is part of a larger program that
+     * explores different possible difference covers based on certain input
+     * parameters.
+     *
+     * The function takes four inputs: 't' (the current element index being
+     * added), 'p' (the previous element index), 'tt' (a triangle number related
+     * to 't'), and 'diffset' (an array tracking differences between elements).
+     *
+     * The main output of this function is not directly returned, but rather it
+     * prints the generated difference cover when a valid set is found using the
+     * PrintD method.
+     *
+     * The function works by building up the difference cover one element at a
+     * time. It starts by copying the input diffset into a new array called
+     * 'differences'. Then, it calculates new differences based on the current
+     * element and updates the 'differences' array.
+     *
+     * There's a threshold check that counts the number of differences and
+     * compares it to a calculated value. If the count is too low, the function
+     * returns early, as this branch won't lead to a valid difference cover.
+     *
+     * If the function hasn't returned early, it then checks if it has reached
+     * the end of the set (when t1 >= this->d). If so, it prints the current
+     * difference cover using PrintD.
+     *
+     * If it hasn't reached the end, the function calculates some new values and
+     * enters a recursive phase. It tries different possibilities for the next
+     * element in the set, calling itself recursively for each possibility. This
+     * is how it explores all potential difference covers.
+     *
+     * The logic flow involves a lot of conditional checks and recursive calls.
+     * The function is essentially performing a depth-first search through the
+     * space of possible difference covers, pruning branches that won't lead to
+     * valid solutions.
+     *
+     * An important data transformation happening is the continuous updating of
+     * the 'differences' array, which keeps track of the differences between
+     * elements in the current partial solution. This array is crucial for
+     * determining whether a particular branch of the search is worth pursuing.
+     *
+     * In simple terms, you can think of this function as exploring a tree of
+     * possibilities, where each node in the tree represents a partial
+     * difference cover. The function keeps adding elements and checking if they
+     * lead to a valid solution, backtracking when necessary to try other
+     * possibilities.
+     */
+
     /*-----------------------------------------------------------*/
     // FIXED DENSITY
     /*-----------------------------------------------------------*/
@@ -76,10 +120,10 @@ struct DiffCover {
      * Recursively generates all possible D-sets by building them up one
      * element at a time.
      *
-     * t - Current element index being added
-     * p - Previous element index
-     * tt - Triangle number of current index t
-     * diffset[] - Bit array tracking differences between elements
+     * @param t - Current element index being added
+     * @param p - Previous element index
+     * @param tt - Triangle number of current index t
+     * @param diffset[] - Bit array tracking differences between elements
      */
     void GenD(int t, int p, int tt, int8_t diffset[]) {
         int8_t differences[MAX_N];
@@ -133,6 +177,57 @@ struct DiffCover {
 void usage() { printf("Usage: necklace [n] [density] [threshold]\n"); }
 //--------------------------------------------------------------------------------
 
+/**
+ * Main Function in mdiffset.cpp
+ *
+ * This code is the main function of a program that generates difference covers,
+ * which are special sets of numbers used in various mathematical and
+ * computational applications. The program takes command-line arguments, uses
+ * parallel processing to speed up calculations, and prints the results.
+ *
+ * The function takes two inputs: the number of command-line arguments (argc)
+ * and an array of those arguments (argv). It expects three specific arguments:
+ * n (the size of the set), d (the density of the difference cover), and a
+ * threshold value.
+ *
+ * The main output of this program is a series of difference covers printed to
+ * the console. These are sets of numbers that satisfy certain mathematical
+ * properties based on the input parameters.
+ *
+ * Here's how the program works:
+ *
+ * It first checks if the correct number of arguments is provided. If not, it
+ * shows a usage message and exits.
+ *
+ * It then reads the input values (n, d, and threshold) from the command-line
+ * arguments.
+ *
+ * There's a check to ensure that n is not too large compared to d. If it is,
+ * the program prints an error message and exits.
+ *
+ * The program then sets up parallel processing. It creates a "thread pool" with
+ * a number of workers based on the computer's capabilities. This allows the
+ * program to run calculations simultaneously on multiple CPU cores.
+ *
+ * The main algorithm runs in a loop. For each value of j from start to end:
+ *
+ * It creates a new DiffCover object with the input parameters.
+ * It sets initial values for this object.
+ * It calls a function named GenD, which likely generates the difference cover.
+ * Each of these tasks is added to the thread pool to be executed in parallel.
+ * Finally, the program waits for all the parallel tasks to complete, showing a
+ * countdown as they finish.
+ *
+ * The key logic in this code is the parallelization of the DiffCover
+ * generation. Instead of calculating one difference cover at a time, it starts
+ * multiple calculations simultaneously, potentially speeding up the overall
+ * process significantly. The actual generation of the difference covers happens
+ * in the GenD function, which is called for each parallel task.
+ *
+ * This program is designed to efficiently explore many possible difference
+ * covers, leveraging parallel processing to speed up what could otherwise be a
+ * time-consuming mathematical computation.
+ */
 int main(int argc, char **argv) {
     if (argc < 4) {
         usage();
