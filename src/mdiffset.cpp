@@ -13,8 +13,8 @@ const auto MAX_N = 70;
 // GLOBAL VARIABLES
 //-------------------------------------------------------------
 struct DiffCover {
-    int n;
-    int d;
+    int num_elem;
+    int density;
     int a[MAX];
     int b[MAX];
     int threshold;
@@ -29,20 +29,20 @@ struct DiffCover {
     /**
      * Constructs a DiffCover object with the given parameters.
      *
-     * @param n The total number of elements.
-     * @param d The number of elements in the D-set.
+     * @param num_elem The total number of elements.
+     * @param density The number of elements in the D-set.
      * @param threshold The threshold for the number of differences between
      * elements.
      */
-    DiffCover(int n, int d, int threshold)
-        : n{n}, d{d}, threshold{threshold}, d_minus_1{d - 1},
-          d_times_d_minus_1{d * (d - 1)}, n_minus_d{n - d},
-          n1{n / 2 - d * (d - 1) / 2}, n2{n / 2}, // begin_a{&a[0]},
-          size_n{(n / 2 + 1) * sizeof(int8_t)} {
-        for (auto j = 0; j <= d; j++)
+    DiffCover(int num_elem, int density, int threshold)
+        : num_elem{num_elem}, density{density}, threshold{threshold}, d_minus_1{density - 1},
+          d_times_d_minus_1{density * (density - 1)}, n_minus_d{num_elem - density},
+          n1{num_elem / 2 - density * (density - 1) / 2}, n2{num_elem / 2}, // begin_a{&a[0]},
+          size_n{(num_elem / 2 + 1) * sizeof(int8_t)} {
+        for (auto j = 0; j <= density; j++)
             a[j] = 0;
 
-        a[d] = n;
+        a[density] = num_elem;
         a[0] = 0; // for convenience
     }
 
@@ -53,7 +53,7 @@ struct DiffCover {
     void PrintD() const {
         // print a
         printf("\n");
-        for (auto i = 1; i <= this->d; i++) {
+        for (auto i = 1; i <= this->density; i++) {
             printf("%d ", this->a[i]);
         }
         printf("\n");
@@ -88,7 +88,7 @@ struct DiffCover {
      * returns early, as this branch won't lead to a valid difference cover.
      *
      * If the function hasn't returned early, it then checks if it has reached
-     * the end of the set (when t1 >= this->d). If so, it prints the current
+     * the end of the set (when t1 >= this->density). If so, it prints the current
      * difference cover using PrintD.
      *
      * If it hasn't reached the end, the function calculates some new values and
@@ -132,7 +132,7 @@ struct DiffCover {
         const auto at = this->a[t];
         for (auto p = &this->a[0]; p != &this->a[0] + t; ++p) {
             const auto diff = at - *p;
-            const auto n_diff = this->n - diff;
+            const auto n_diff = this->num_elem - diff;
             differences[diff <= n_diff ? diff : n_diff] = 1;
         }
         if (t >= this->threshold) {
@@ -147,7 +147,7 @@ struct DiffCover {
         }
 
         const auto t1 = t + 1;
-        if (t1 >= this->d)
+        if (t1 >= this->density)
             this->PrintD();
         else {
             auto tail = this->n_minus_d + t1;
@@ -174,7 +174,7 @@ struct DiffCover {
 };
 
 //------------------------------------------------------
-void usage() { printf("Usage: necklace [n] [density] [threshold]\n"); }
+void usage() { printf("Usage: necklace [num_elem] [density] [threshold]\n"); }
 //--------------------------------------------------------------------------------
 
 /**
@@ -187,7 +187,7 @@ void usage() { printf("Usage: necklace [n] [density] [threshold]\n"); }
  *
  * The function takes two inputs: the number of command-line arguments (argc)
  * and an array of those arguments (argv). It expects three specific arguments:
- * n (the size of the set), d (the density of the difference cover), and a
+ * num_elem (the size of the set), density (the density of the difference cover), and a
  * threshold value.
  *
  * The main output of this program is a series of difference covers printed to
@@ -199,10 +199,10 @@ void usage() { printf("Usage: necklace [n] [density] [threshold]\n"); }
  * It first checks if the correct number of arguments is provided. If not, it
  * shows a usage message and exits.
  *
- * It then reads the input values (n, d, and threshold) from the command-line
+ * It then reads the input values (num_elem, density, and threshold) from the command-line
  * arguments.
  *
- * There's a check to ensure that n is not too large compared to d. If it is,
+ * There's a check to ensure that num_elem is not too large compared to density. If it is,
  * the program prints an error message and exits.
  *
  * The program then sets up parallel processing. It creates a "thread pool" with
@@ -233,18 +233,18 @@ int main(int argc, char **argv) {
         usage();
         return 1;
     }
-    int n, d, threshold;
+    int num_elem, density, threshold;
 
-    sscanf(argv[1], "%d", &n);
-    sscanf(argv[2], "%d", &d);
+    sscanf(argv[1], "%d", &num_elem);
+    sscanf(argv[2], "%d", &density);
     sscanf(argv[3], "%d", &threshold);
 
-    if (n > d * (d - 1) + 1) {
+    if (num_elem > density * (density - 1) + 1) {
         printf("Error: N must be less than D*(D-1)+1\n");
         return 1;
     }
 
-    // DiffCover diff_cover(n, d, threshold);
+    // DiffCover diff_cover(num_elem, density, threshold);
     // printf("%3d\n", end);
     // diff_cover.run();
 
@@ -252,13 +252,13 @@ int main(int argc, char **argv) {
     ThreadPool pool(num_workers);
     printf("Number of workers: %d\n", num_workers);
     std::vector<std::future<void>> results;
-    auto start = (n + 1) / 2;
-    auto end = (n - 1) / d + 1;
+    auto start = (num_elem + 1) / 2;
+    auto end = (num_elem - 1) / density + 1;
 
-    // for (auto j = n - d + 1; j >= end; j--) {
+    // for (auto j = num_elem - density + 1; j >= end; j--) {
     for (auto j = start; j >= end; j--) {
-        results.emplace_back(pool.enqueue([&n, &d, &threshold, j]() {
-            DiffCover dc(n, d, threshold);
+        results.emplace_back(pool.enqueue([&num_elem, &density, &threshold, j]() {
+            DiffCover dc(num_elem, density, threshold);
             dc.a[1] = j;
             dc.b[1] = 1;
             int8_t differences[MAX_N];
