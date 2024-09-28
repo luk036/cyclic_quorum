@@ -1,3 +1,57 @@
+/**
+mdiffset.cpp
+
+This code is designed to generate and explore difference covers, which are
+special sets of numbers used in various mathematical applications. The program
+takes three main inputs from the command line: the total number of elements
+(num_elem), the density of the difference cover (density), and a threshold
+value.
+
+The main purpose of this code is to find all possible difference covers that
+meet certain criteria based on the input parameters. It does this by
+systematically building up these sets one element at a time and checking if they
+satisfy the required conditions.
+
+The program starts by checking if the correct number of command-line arguments
+is provided. If not, it displays a usage message and exits. It then reads the
+input values and performs a quick check to ensure the number of elements isn't
+too large compared to the density.
+
+To speed up the process of finding difference covers, the program uses parallel
+processing. It creates a "thread pool" that allows multiple calculations to run
+simultaneously on different CPU cores. This is especially helpful when dealing
+with large numbers or complex sets.
+
+The main algorithm works by creating multiple DiffCover objects, each
+representing a potential difference cover. For each of these objects, it sets
+some initial values and then calls a function named GenD. This GenD function is
+where the real work happens - it recursively builds up the difference cover,
+checking at each step whether the current set of numbers meets the required
+conditions.
+
+As the program runs, it keeps track of how many calculations are left to do and
+displays a countdown. When all calculations are complete, the program finishes.
+
+The most important part of the logic is in the GenD function. This function
+works by trying different possibilities for each element in the set. It keeps
+track of the differences between elements using an array, and uses this
+information to decide whether to continue exploring a particular set of numbers
+or to backtrack and try something else.
+
+In simpler terms, you can think of this program as exploring a huge tree of
+possibilities. Each branch of the tree represents a different potential
+difference cover. The program systematically checks each branch, pruning off
+ones that won't work and following promising ones to their conclusion. When it
+finds a valid difference cover, it prints it out.
+
+The main output of this program is a series of difference covers printed to the
+console. These are the sets of numbers that satisfy all the conditions based on
+the input parameters.
+
+Overall, this code demonstrates an efficient way to solve a complex mathematical
+problem by breaking it down into smaller parts, using parallel processing to
+speed things up, and systematically exploring all possibilities.
+*/
 #include "ThreadPool.h"
 #include <cstdint>
 #include <cstdio>
