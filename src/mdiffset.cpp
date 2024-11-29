@@ -304,7 +304,7 @@ int main(int argc, char **argv) {
     // printf("%3d\n", end);
     // diff_cover.run();
 
-    auto num_workers = std::thread::hardware_concurrency() * 3 / 4;
+    auto num_workers = std::thread::hardware_concurrency();
     ThreadPool pool(num_workers);
     printf("Number of workers: %d\n", num_workers);
     std::vector<std::future<void>> results;
