@@ -186,16 +186,16 @@ struct DiffCover {
         memcpy(differences, diffset, this->size_n);
 
         const auto at = this->a[t];
-        for (auto p = &this->a[0]; p != &this->a[0] + t; ++p) {
-            const auto diff = at - *p;
+        for (auto ptr = &this->a[0]; ptr != &this->a[0] + t; ++ptr) {
+            const auto diff = at - *ptr;
             const auto n_diff = this->num_elem - diff;
             differences[diff <= n_diff ? diff : n_diff] = 1;
         }
         if (t >= this->threshold) {
             int8_t count = 0;
             const int8_t *begin = &differences[1];
-            for (auto p = begin; p != begin + this->n2; ++p) {
-                count += *p;
+            for (auto ptr = begin; ptr != begin + this->n2; ++ptr) {
+                count += *ptr;
             }
             if (int(count) < this->n1 + tt) {
                 return;
