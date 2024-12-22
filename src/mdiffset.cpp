@@ -52,13 +52,14 @@ Overall, this code demonstrates an efficient way to solve a complex mathematical
 problem by breaking it down into smaller parts, using parallel processing to
 speed things up, and systematically exploring all possibilities.
 */
-#include "ThreadPool.h"
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <future> // for future
+#include <future>  // for future
 #include <vector>
+
+#include "ThreadPool.h"
 
 const auto MAX = 20;
 const auto MAX_N = 80;
@@ -89,17 +90,19 @@ struct DiffCover {
      * elements.
      */
     DiffCover(int num_elem, int density, int threshold)
-        : num_elem{num_elem}, density{density}, threshold{threshold},
-          d_minus_1{density - 1}, d_times_d_minus_1{density * (density - 1)},
+        : num_elem{num_elem},
+          density{density},
+          threshold{threshold},
+          d_minus_1{density - 1},
+          d_times_d_minus_1{density * (density - 1)},
           n_minus_d{num_elem - density},
           n1{num_elem / 2 - density * (density - 1) / 2},
-          n2{num_elem / 2}, // begin_a{&a[0]},
+          n2{num_elem / 2},  // begin_a{&a[0]},
           size_n{(num_elem / 2 + 1) * sizeof(int8_t)} {
-        for (auto j = 0; j <= density; j++)
-            a[j] = 0;
+        for (auto j = 0; j <= density; j++) a[j] = 0;
 
         a[density] = num_elem;
-        a[0] = 0; // for convenience
+        a[0] = 0;  // for convenience
     }
 
     //-------------------------------------------------------------
@@ -304,7 +307,7 @@ int main(int argc, char **argv) {
     // printf("%3d\n", end);
     // diff_cover.run();
 
-    auto num_workers = std::thread::hardware_concurrency();
+    auto num_workers = std::thread::hardware_concurrency() * 3 / 4;
     ThreadPool pool(num_workers);
     printf("Number of workers: %d\n", num_workers);
     std::vector<std::future<void>> results;
@@ -313,16 +316,15 @@ int main(int argc, char **argv) {
 
     // for (auto j = num_elem - density + 1; j >= end; j--) {
     for (auto j = start; j >= end; j--) {
-        results.emplace_back(
-            pool.enqueue([&num_elem, &density, &threshold, j]() {
-                DiffCover dc(num_elem, density, threshold);
-                dc.a[1] = j;
-                dc.b[1] = 1;
-                int8_t differences[MAX_N];
-                memset(differences, 0, dc.size_n);
-                differences[0] = 1;
-                dc.GenD(1, 1, 1, differences);
-            }));
+        results.emplace_back(pool.enqueue([&num_elem, &density, &threshold, j]() {
+            DiffCover dc(num_elem, density, threshold);
+            dc.a[1] = j;
+            dc.b[1] = 1;
+            int8_t differences[MAX_N];
+            memset(differences, 0, dc.size_n);
+            differences[0] = 1;
+            dc.GenD(1, 1, 1, differences);
+        }));
     }
     auto countdown = start - end;
     for (auto &&result : results) {
