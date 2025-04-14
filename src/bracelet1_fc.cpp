@@ -1,5 +1,5 @@
-#include <iostream>
 #include <array>
+#include <iostream>
 
 struct Cell {
     int next;
@@ -12,12 +12,15 @@ struct Element {
 };
 
 class NecklaceGenerator {
-public:
-    NecklaceGenerator(int n, int num1, int num2) : 
-        n(n), total(0), head(2), nb(0) {
+  public:
+    // Constants
+    static constexpr bool NECK = true;
+    static constexpr bool LYN = false;
+
+    NecklaceGenerator(int n, int num1, int num2) : n(n), total(0), head(2), nb(0) {
         num[1] = num1;
         num[2] = num2;
-        
+
         // Initialize linked list
         for (int j = 3; j >= 0; j--) {
             avail[j] = {j - 1, j + 1};
@@ -40,11 +43,11 @@ public:
         std::cout << "Total = " << total << "\n";
     }
 
-private:
+  private:
     // State
     std::array<Cell, 50> avail;
     std::array<Element, 50> B;
-    std::array<int, 3> num;
+    std::array<int, 3> num;  // Only need counts for 1 and 2 (0 is unused)
     std::array<int, 50> a;
     std::array<int, 50> run;
     int n;
@@ -64,12 +67,11 @@ private:
         if (avail[i].prev == 3) head = i;
     }
 
-    int listNext(int i) const {
-        return avail[i].next;
-    }
+    int listNext(int i) const { return avail[i].next; }
 
     void print(int p) const {
-        if (n % p != 0) return;  // Only NECK condition remains
+        if (NECK && n % p != 0) return;
+        if (LYN && n != p) return;
         for (int j = 1; j <= n; j++) std::cout << a[j] - 1 << " ";
         std::cout << "\n";
         const_cast<NecklaceGenerator*>(this)->total++;
@@ -94,9 +96,7 @@ private:
 
     int checkRev() const {
         int j = 1;
-        while (j <= nb / 2 && 
-               B[j].v == B[nb - j + 1].v && 
-               B[j].s == B[nb - j + 1].s) {
+        while (j <= nb / 2 && B[j].v == B[nb - j + 1].v && B[j].s == B[nb - j + 1].s) {
             j++;
         }
         if (j > nb / 2) return 0;
@@ -141,7 +141,7 @@ private:
 
                 const int z2 = (j != 2) ? t + 1 : z;
                 const int p2 = (j != a[t - p]) ? t : p;
-                
+
                 const int c = checkRev();
                 if (c == 0) gen(t + 1, p2, t, z2, nb, false);
                 if (c == 1) gen(t + 1, p2, r, z2, b, RS);
