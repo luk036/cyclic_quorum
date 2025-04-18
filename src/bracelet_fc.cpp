@@ -13,9 +13,9 @@ struct Element {
 
 class NecklaceGenerator {
 public:
-    NecklaceGenerator(int n, int num1, int num2) : 
+    NecklaceGenerator(int n, int num2) : 
         n(n), total(0), head(2), nb(0) {
-        num[1] = num1;
+        num[1] = n - num2;
         num[2] = num2;
         
         // Initialize linked list
@@ -42,11 +42,11 @@ public:
 
 private:
     // State
-    std::array<Cell, 50> avail;
-    std::array<Element, 50> B;
+    std::array<Cell, 168> avail;
+    std::array<Element, 168> B;
     std::array<int, 3> num;
-    std::array<int, 50> a;
-    std::array<int, 50> run;
+    std::array<int, 168> a;
+    std::array<int, 168> run;
     int n;
     int total;
     int head;
@@ -69,9 +69,9 @@ private:
     }
 
     void print(int p) const {
-        if (n % p != 0) return;  // Only NECK condition remains
-        for (int j = 1; j <= n; j++) std::cout << a[j] - 1 << " ";
-        std::cout << "\n";
+        if (n % p != 0) return;
+        // for (int j = 1; j <= n; j++) std::cout << a[j] - 1 << " ";
+        // std::cout << "\n";
         const_cast<NecklaceGenerator*>(this)->total++;
     }
 
@@ -143,9 +143,64 @@ private:
                 const int p2 = (j != a[t - p]) ? t : p;
                 
                 const int c = checkRev();
-                if (c == 0) gen(t + 1, p2, t, z2, nb, false);
-                if (c == 1) gen(t + 1, p2, r, z2, b, RS);
+                if (c == 0) {
+                    std::cout << t << "," << j << " <------\n";
+                    gen1(t + 1, p2, t, z2, nb, false);
+                }
+                if (c == 1) {
+                    std::cout << t << "," << j << " <------\n";
+                    gen1(t + 1, p2, r, z2, b, RS);
+                }
+                if (num[j] == 0) listAdd(j);
+                num[j]++;
+                restoreRunLength();
+                j = listNext(j);
+            }
+            a[t] = 2;
+        }
+    }
 
+    void gen1(int t, int p, int r, int z, int b, bool RS) {
+        // Incremental comparison with reversal
+        if (t - 1 > (n - r) / 2 + r) {
+            if (a[t - 1] > a[n - t + 2 + r]) {
+                RS = false;
+            } else if (a[t - 1] < a[n - t + 2 + r]) {
+                RS = true;
+            }
+        }
+
+        // Termination condition - only 2's remain
+        if (num[2] == n - t + 1) {
+            if (num[2] > run[t - p]) p = n;
+            if (num[2] > 0 && t != r + 1 && B[b + 1].s == 2 && B[b + 1].v > num[2]) {
+                RS = true;
+            }
+            if (num[2] > 0 && t != r + 1 && (B[b + 1].s != 2 || B[b + 1].v < num[2])) {
+                RS = false;
+            }
+            if (!RS) print(p);
+        }
+        // Recursive extension
+        else if (num[1] != n - t + 1) {
+            int j = head;
+            while (j >= a[t - p]) {
+                run[z] = t - z;
+                updateRunLength(j);
+                num[j]--;
+                if (num[j] == 0) listRemove(j);
+                a[t] = j;
+
+                const int z2 = (j != 2) ? t + 1 : z;
+                const int p2 = (j != a[t - p]) ? t : p;
+                
+                const int c = checkRev();
+                if (c == 0) {
+                    gen1(t + 1, p2, t, z2, nb, false);
+                }
+                if (c == 1) {
+                    gen1(t + 1, p2, r, z2, b, RS);
+                }
                 if (num[j] == 0) listAdd(j);
                 num[j]++;
                 restoreRunLength();
@@ -157,15 +212,13 @@ private:
 };
 
 int main() {
-    int n, num1, num2;
+    int n, num2;
     std::cout << "enter n: ";
     std::cin >> n;
-    std::cout << " enter # of 1's: ";
-    std::cin >> num1;
-    std::cout << " enter # of 2's: ";
+    std::cout << "enter # of 2's: ";
     std::cin >> num2;
 
-    NecklaceGenerator generator(n, num1, num2);
+    NecklaceGenerator generator(n, num2);
     generator.generate();
     return 0;
 }
