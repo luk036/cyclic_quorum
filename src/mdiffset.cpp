@@ -190,9 +190,9 @@ struct DiffCover {
 
         const auto at = this->a[t];
         for (auto ptr = &this->a[0]; ptr != &this->a[0] + t; ++ptr) {
-            const auto diff = at - *ptr;
-            const auto n_diff = this->num_elem - diff;
-            differences[diff <= n_diff ? diff : n_diff] = 1;
+            const auto p_diff = at - *ptr;
+            const auto n_diff = this->num_elem - p_diff;
+            differences[p_diff <= n_diff ? p_diff : n_diff] = 1;
         }
         if (t >= this->threshold) {
             int8_t count = 0;
@@ -299,7 +299,7 @@ int main(int argc, char **argv) {
     sscanf(argv[3], "%d", &threshold);
 
     if (num_elem > density * (density - 1) + 1) {
-        printf("Error: N must be less than D*(D-1)+1\n");
+        printf("Error: N must be less than or equal to D * (D - 1) + 1\n");
         return 1;
     }
 
