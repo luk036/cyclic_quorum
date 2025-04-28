@@ -181,10 +181,9 @@ struct DiffCover {
      *
      * @param t - Current element index being added
      * @param p - Previous element index
-     * @param tt - Triangle number of current index t
      * @param diffset[] - Bit array tracking differences between elements
      */
-    void GenD(int t, int p, int tt, int8_t diffset[]) {
+    void GenD(int t, int p, int8_t diffset[]) {
         int8_t differences[MAX_N];
         memcpy(differences, diffset, this->size_n);
 
@@ -200,7 +199,7 @@ struct DiffCover {
             for (auto ptr = begin; ptr != begin + this->n2; ++ptr) {
                 count += *ptr;
             }
-            if (int(count) < this->n1 + tt) {
+            if (int(count) < this->n1 + t * (t + 1) / 2) {
                 return;
             }
         }
@@ -211,22 +210,22 @@ struct DiffCover {
         else {
             auto tail = this->n_minus_d + t1;
             const auto max = this->a[t1 - p] + this->a[p];
-            const auto tt1 = t1 * (t1 + 1) / 2;
+            // const auto tt1 = t1 * (t1 + 1) / 2;
             if (max <= tail) {
                 this->a[t1] = max;
                 this->b[t1] = this->b[t1 - p];
 
-                this->GenD(t1, p, tt1, differences);
+                this->GenD(t1, p, differences);
                 if (this->b[t1] == 0) {
                     this->b[t1] = 1;
-                    this->GenD(t1, t1, tt1, differences);
+                    this->GenD(t1, t1, differences);
                 }
                 tail = max - 1;
             }
             for (auto j = tail; j >= at + 1; j--) {
                 this->a[t1] = j;
                 this->b[t1] = 1;
-                this->GenD(t1, t1, tt1, differences);
+                this->GenD(t1, t1, differences);
             }
         }
     }
@@ -323,7 +322,7 @@ int main(int argc, char **argv) {
             int8_t differences[MAX_N];
             memset(differences, 0, dc.size_n);
             differences[0] = 1;
-            dc.GenD(1, 1, 1, differences);
+            dc.GenD(1, 1, differences);
         }));
     }
     auto countdown = start - end;

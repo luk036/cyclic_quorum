@@ -24,7 +24,7 @@
 
 #include "ThreadPool.h"
 
-static constexpr int MAX_N = 160;
+static constexpr int MAX_N = 80;
 static constexpr int MAX_D = 20;
 
 class DcGenerator {
@@ -37,15 +37,15 @@ private:
     int a[MAX_D];
     int b[MAX_D];
     int8_t differences[MAX_N];
-    int count;
+    // int count;
 
 public:
-    DcGenerator(int n, int d, int j) : N(n), D(d), ND(N - D), N1(N - D * (D - 1)), count(1) {
+    DcGenerator(int n, int d, int j) : N(n), D(d), ND(N - D), N1(N / 2 - D * (D - 1) / 2) {
         // Initialize arrays to zero
         std::memset(a, 0, sizeof(a));
         std::memset(b, 0, sizeof(b));
         std::memset(differences, 0, sizeof(differences));
-        
+
         a[D] = N; // for printing only
         a[0] = 0; // for computing
         a[1] = j;
@@ -53,18 +53,16 @@ public:
         differences[0] = 1;
     }
 
-    inline void step_forward(int t) {
+    inline void step_forward(int t, int& count) {
         const int at = a[t];
         for (int j = 0; j < t; ++j) {
             const int aj = a[j];
             const int p_diff = at - aj;
             const int n_diff = N - p_diff;
-            
+            const int diff = p_diff < n_diff ? p_diff : n_diff;
+
             // Note that p_diff may be equal to n_diff
-            if (differences[p_diff]++ == 0) {
-                ++count;
-            }            
-            if (differences[n_diff]++ == 0) {
+            if (differences[diff]++ == 0) {
                 ++count;
             }
         }
@@ -76,33 +74,32 @@ public:
             const int aj = a[j];
             const int p_diff = at - aj;
             const int n_diff = N - p_diff;
-            
+            const int diff = p_diff < n_diff ? p_diff : n_diff;
+            --differences[diff];
             // Note that p_diff may be equal to n_diff
-            if (--differences[p_diff] == 0) {
-                --count;
-            }
-            if (--differences[n_diff] == 0) {
-                --count;
-            }
+            // if (--differences[diff] == 0) {
+            //     --count;
+            // }
         }
     }
 
-    void PrintD(int p) {
+    void PrintD(int p, int count) {
         /* Determine minimum position for next bit */
-        const int next = (D / p) * a[p] + a[D % p];
+        const int Dp = D % p;
+        const int next = (D / p) * a[p] + a[Dp];
         if (next < N) return;
 
         /* Determine last bit */
         int min = 1;
-        if ((next == N) && (D % p != 0)) {
-            min = b[D % p] + 1;
-        } else if ((next == N) && (D % p == 0)) {
+        if ((next == N) && (Dp != 0)) {
+            min = b[Dp] + 1;
+        } else if ((next == N) && (Dp == 0)) {
             min = b[p];
         }
-        
-        if (min == 1 && !(N % a[p] == 0 && a[p] != N)) {
-            step_forward(D - 1);
-            if (count >= N) {
+
+        if (min == 1) {
+            step_forward(D - 1, count);
+            if (count >= N / 2) {
                 printf("\n");
                 for (int i = 1; i <= D; ++i) {
                     printf("%3d ", a[i]);
@@ -114,55 +111,58 @@ public:
         }
     }
 
-    void GenD(int t, int p) {
-        if (t + 1 >= D) {
-            PrintD(p);
+    void GenD(int t, int p, int count) {
+        const int t_1 = t + 1;
+        
+        if (t_1 >= D) {
+            PrintD(p, count);
             return;
         }
 
-        step_forward(t);
-        if (count >= N1 + t * (t + 1)) {
-            int tail = ND + (t + 1);
-            const int max = a[t + 1 - p] + a[p];
-            
+        step_forward(t, count);
+        if (count >= N1 + t * t_1 / 2) {
+            int tail = ND + t_1;
+            const int max = a[t_1 - p] + a[p];
+
             if (max <= tail) {
-                a[t + 1] = max;
-                b[t + 1] = b[t + 1 - p];
-                GenD(t + 1, p);
+                a[t_1] = max;
+                b[t_1] = b[t_1 - p];
+                GenD(t_1, p, count);
                 tail = max - 1;
             }
-            
+
             for (int j = tail; j >= a[t] + 1; --j) {
-                a[t + 1] = j;
-                b[t + 1] = 1;
-                GenD(t + 1, t + 1);
+                a[t_1] = j;
+                b[t_1] = 1;
+                GenD(t_1, t_1, count);
             }
         }
         step_backward(t);
     }
 
     void Gen11() {
-        step_forward(1);
+        int count = 0;
+        step_forward(1, count);
         int tail = ND + 2;
         const int max = a[1] + a[1];
-        
+
         if (max <= tail) {
             a[2] = max;
             b[2] = b[1];
-            GenD(2, 1);
+            GenD(2, 1, count);
             tail = max - 1;
         }
-        
+
         for (int j = tail; j >= a[1] + 1; --j) {
             a[2] = j;
             b[2] = 1;
-            GenD(2, 2);
+            GenD(2, 2, count);
         }
-        step_backward(1);
+        // step_backward(1);
     }
 
-    static void usage() { 
-        printf("Usage: necklace [n] [d] (n>=3, d>=3, n>=d*(d-1)+1)\n"); 
+    static void usage() {
+        printf("Usage: necklace [n] [d] (n>=3, d>=3, n>=d*(d-1)+1)\n");
     }
 };
 
@@ -170,10 +170,10 @@ void InitParallel(int N, int D) {
     const unsigned num_workers = std::thread::hardware_concurrency() * 3 / 4;
     ThreadPool pool(num_workers);
     printf("Number of workers: %u\n", num_workers);
-    
+
     std::vector<std::future<void>> results;
     results.reserve((N + 1)/2 - (N - 1)/D); // Pre-allocate space
-    
+
     const int start = (N + 1) / 2;
     const int end = (N - 1) / D + 1;
 
