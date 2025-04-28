@@ -167,7 +167,7 @@ public:
 };
 
 void InitParallel(int N, int D) {
-    const unsigned num_workers = std::thread::hardware_concurrency() * 3 / 4;
+    const unsigned num_workers = std::thread::hardware_concurrency();
     ThreadPool pool(num_workers);
     printf("Number of workers: %u\n", num_workers);
 
