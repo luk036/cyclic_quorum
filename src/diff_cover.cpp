@@ -32,6 +32,8 @@ private:
     const int N;
     const int D;
     const int ND;
+    const int D1;
+    const int N2;
     const int N1;
 
     int a[MAX_D];
@@ -40,7 +42,8 @@ private:
     // int count;
 
 public:
-    DcGenerator(int n, int d, int j) : N(n), D(d), ND(N - D), N1(N / 2 - D * (D - 1) / 2) {
+    DcGenerator(int n, int d, int j)
+        : N(n), D(d), ND(N - D), N2(N / 2), D1(D - 1), N1(N2 - D * D1 / 2) {
         // Initialize arrays to zero
         std::memset(a, 0, sizeof(a));
         std::memset(b, 0, sizeof(b));
@@ -91,15 +94,18 @@ public:
 
         /* Determine last bit */
         int min = 1;
-        if ((next == N) && (Dp != 0)) {
-            min = b[Dp] + 1;
-        } else if ((next == N) && (Dp == 0)) {
-            min = b[p];
+        // if ((next == N) && (Dp != 0)) {
+        //     min = b[Dp] + 1;
+        // } else if ((next == N) && (Dp == 0)) {
+        //     min = b[p];
+        // }
+        if (next == N) { 
+            min = Dp != 0 ? b[Dp] + 1 : b[p];
         }
 
         if (min == 1) {
-            step_forward(D - 1, count);
-            if (count >= N / 2) {
+            step_forward(D1, count);
+            if (count >= N2) {
                 printf("\n");
                 for (int i = 1; i <= D; ++i) {
                     printf("%3d ", a[i]);
@@ -107,19 +113,19 @@ public:
                 printf("\n");
                 fflush(stdout);
             }
-            step_backward(D - 1);
+            step_backward(D1);
         }
     }
 
     void GenD(int t, int p, int count) {
-        const int t_1 = t + 1;
-        
-        if (t_1 >= D) {
+        if (t >= D1) {
             PrintD(p, count);
             return;
         }
 
+        const int t_1 = t + 1;        
         step_forward(t, count);
+        
         if (count >= N1 + t * t_1 / 2) {
             int tail = ND + t_1;
             const int max = a[t_1 - p] + a[p];
