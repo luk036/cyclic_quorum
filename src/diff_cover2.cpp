@@ -123,7 +123,7 @@ public:
             return;
         }
 
-        if (a[t] - a[t - 1] < a[t - 1] - a[t - 2]) {
+        if (a[t] - a[t - 1] > a[t - 1] - a[t - 2]) {
             // check bracelet condition
             return;
         }
@@ -151,6 +151,34 @@ public:
         step_backward(t);
     }
 
+    void GenD2(int p, int count) {
+        if (a[2] - a[1] > a[1] - a[0]) {
+            // check bracelet condition
+            return;
+        }
+
+        step_forward(2, count);
+        
+        if (count >= N1 + 3) {
+            int tail = ND + 3;
+            const int max = a[3 - p] + a[p];
+
+            if (max <= tail) {
+                a[3] = max;
+                b[3] = b[3 - p];
+                GenD(3, p, count);
+                tail = max - 1;
+            }
+
+            for (int j = tail; j >= a[2] + 1; --j) {
+                a[3] = j;
+                b[3] = 1;
+                GenD(3, 3, count);
+            }
+        }
+        step_backward(2);
+    }
+
     void Gen11() {
         int count = 0;
         step_forward(1, count);
@@ -160,14 +188,14 @@ public:
         if (max <= tail) {
             a[2] = max;
             b[2] = b[1];
-            GenD(2, 1, count);
+            GenD2(1, count);
             tail = max - 1;
         }
 
         for (int j = tail; j >= a[1] + 1; --j) {
             a[2] = j;
             b[2] = 1;
-            GenD(2, 2, count);
+            GenD2(2, count);
         }
         // step_backward(1);
     }
