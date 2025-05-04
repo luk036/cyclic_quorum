@@ -24,7 +24,7 @@
 
 #include "ThreadPool.h"
 
-static constexpr int MAX_N = 80;
+static constexpr int MAX_C = 128;
 static constexpr int MAX_D = 20;
 
 class DcGenerator {
@@ -38,7 +38,7 @@ private:
 
     int a[MAX_D];
     int b[MAX_D];
-    int8_t differences[MAX_N];
+    int8_t differences[MAX_C];
     // int count;
 
 public:
@@ -94,27 +94,22 @@ public:
 
         /* Determine last bit */
         int min = 1;
-        // if ((next == N) && (Dp != 0)) {
-        //     min = b[Dp] + 1;
-        // } else if ((next == N) && (Dp == 0)) {
-        //     min = b[p];
-        // }
         if (next == N) { 
             min = Dp != 0 ? b[Dp] + 1 : b[p];
         }
 
-        if (min == 1) {
-            step_forward(D1, count);
-            if (count >= N2) {
-                printf("\n");
-                for (int i = 1; i <= D; ++i) {
-                    printf("%3d ", a[i]);
-                }
-                printf("\n");
-                fflush(stdout);
+        if (min != 1) return;
+        
+        step_forward(D1, count);
+        if (count >= N2) {
+            printf("\n");
+            for (int i = 1; i <= D; ++i) {
+                printf("%3d ", a[i]);
             }
-            step_backward(D1);
+            printf("\n");
+            fflush(stdout);
         }
+        step_backward(D1);
     }
 
     void GenD(int t, int p, int count) {

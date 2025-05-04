@@ -24,6 +24,7 @@
 
 #include "ThreadPool.h"
 
+static constexpr int MAX_N = 256;
 static constexpr int MAX_C = 128;
 static constexpr int MAX_D = 20;
 
@@ -37,7 +38,9 @@ private:
     const int N1;
 
     int a[MAX_D];
-    // int b[MAX_D];
+    int q[MAX_N];
+    // int s[MAX_N];
+
     int8_t differences[MAX_C];
     // int count;
 
@@ -46,14 +49,25 @@ public:
         : N(n), D(d), ND(N - D), N2(N / 2), D1(D - 1), N1(N2 - D * D1 / 2) {
         // Initialize arrays to zero
         std::memset(a, 0, sizeof(a));
-        // std::memset(b, 0, sizeof(b));
+        std::memset(q, 0, sizeof(q));
+        // std::memset(s, 0, sizeof(s));
         std::memset(differences, 0, sizeof(differences));
 
-        a[D] = N; // for printing only
-        a[0] = 0; // for computing
+        a[D] = N; // for generating bracelets
+        a[0] = 0; // for computing difference cover
+        // s[N] = D;
+
         a[1] = j;
-        // b[1] = 1;
+        q[j] = 1;
         differences[0] = 1;
+    }
+
+    int CheckRev(int t_1) {
+        for (int j = a[1]; j <= t_1 / 2; ++j) {
+            if (q[j] < q[t_1 - j]) return 1;
+            if (q[j] > q[t_1 - j]) return -1;
+        }
+        return 0;
     }
 
     inline void step_forward(int t, int& count) {
@@ -93,12 +107,13 @@ public:
         if (next < N) return;
 
         /* Determine last bit */
-        // int min = 1;
-        // if (next == N) { 
-        //     min = Dp != 0 ? b[Dp] + 1 : b[p];
-        // }
-        // if (min != 1) return;
-        
+        int min = 1;
+        if (next == N) { 
+            min = Dp != 0 ? q[a[Dp]] + 1 : q[a[p]];
+        }     
+        if (min != 1) return;
+
+        // if (min == 1) {
         step_forward(D1, count);
         if (count >= N2) {
             printf("\n");
@@ -109,13 +124,24 @@ public:
             fflush(stdout);
         }
         step_backward(D1);
+        // }
     }
 
-    void GenD(int t, int p, int count) {
+    void BraceFD(int t, int p, int r1, int count) {
         if (t >= D1) {
             PrintD(p, count);
             return;
         }
+
+        const int at = a[t];
+        // if (at > (N - r1 + 1) / 2 + r1 - 1) {
+        //     int e = N - at + r1;
+        //     if (q[at] > q[e]) RS = false;
+        //     else if (q[at] < q[e]) RS = true;
+        //     else if (at - a[t - 1] > a[s[e] + 1] - a[s[e]]) {
+        //         RS = true;
+        //     }
+        // }
 
         const int t_1 = t + 1;        
         step_forward(t, count);
@@ -125,38 +151,84 @@ public:
             const int max = a[t_1 - p] + a[p];
 
             if (max <= tail) {
+                int r2 = r1;
+                // bool RS2 = RS;
                 a[t_1] = max;
-                // b[t_1] = b[t_1 - p];
-                GenD(t_1, p, count);
+                q[max] = q[a[t_1 - p]];
+                // s[max] = t_1;
+                if (a[1] == max - at) {
+                    int rev = CheckRev(max);
+                    if (rev == 0) {
+                        r2 = max;
+                        // RS2 = false;
+                    }
+                    if (rev != -1) {
+                        BraceFD(t_1, p, r2, count);
+                    }
+                }
+                else {
+                    BraceFD(t_1, p, r1, count);
+                }
+                q[max] = 0;
+                // s[max] = 0;
                 tail = max - 1;
             }
-
-            for (int j = tail; j >= a[t] + 1; --j) {
+            for (int j = tail; j >= at + 1; --j) {
                 a[t_1] = j;
-                // b[t_1] = 1;
-                GenD(t_1, t_1, count);
+                // s[j] = t_1;
+                q[j] = 1;
+                BraceFD(t_1, t_1, r1, count);
+                q[j] = 0;
+                // s[j] = 0;
             }
         }
         step_backward(t);
     }
 
-    void Gen11() {
+    void BraceFD11() {
+        const int a1 = a[1];
+        const int r1 = a1;
+        // const bool RS = false;
+
+        // if (0 > (N - r) / 2 - 1) {
+        //     printf("Boom!!!\n");
+        //     exit(1);
+        // }
+
         int count = 0;
         step_forward(1, count);
         int tail = ND + 2;
-        const int max = a[1] + a[1];
-
+        const int max = a1 + a1;
         if (max <= tail) {
+            int r2 = r1;
+            // bool RS2 = RS;
             a[2] = max;
-            // b[2] = b[1];
-            GenD(2, 1, count);
+            q[max] = q[a1];
+            // s[max] = 2;
+            if (a1 == max - a1) {
+                // if (CheckRev(max) != 0) {
+                //     printf("Boom2!!!\n");
+                //     exit(2);
+                // }
+                r2 = max;
+                // RS2 = false;
+                BraceFD(2, 1, r2, count);
+            }
+            else {
+                BraceFD(2, 1, r1, count);
+            }
+            q[max] = 0;
+            // s[max] = 0;
             tail = max - 1;
         }
 
-        for (int j = tail; j >= a[1] + 1; --j) {
+        for (int j = tail; j >= a1 + 1; --j) {
             a[2] = j;
-            // b[2] = 1;
-            GenD(2, 2, count);
+            // s[j] = 2;
+            q[j] = 1;
+            BraceFD(2, 2, r1, count);
+            q[j] = 0;
+            // s[j] = 0;
         }
         // step_backward(1);
     }
@@ -180,7 +252,7 @@ void InitParallel(int N, int D) {
     for (int j = start; j >= end; --j) {
         results.emplace_back(pool.enqueue([N, D, j]() {
             DcGenerator generator(N, D, j);
-            generator.Gen11();
+            generator.BraceFD11();
         }));
     }
     int countdown = start - end;
