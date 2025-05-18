@@ -38,7 +38,7 @@ private:
 
     int a[MAX_D];
     int b[MAX_D];
-    int8_t differences[MAX_C];
+    int differences[MAX_C];
     // int count;
 
 public:

@@ -41,7 +41,7 @@ private:
     int q[MAX_N];
     // int s[MAX_N];
 
-    int8_t differences[MAX_C];
+    int differences[MAX_C];
     // int count;
 
 public:
