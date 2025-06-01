@@ -13,35 +13,38 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include <stdint.h>
+
 #include <cstdio>
 #include <cstdlib>
-#include <cstring> // for memset, memcpy
-#include <future>  // for future
+#include <cstring>  // for memset, memcpy
+#include <future>   // for future
 #include <vector>
 
 #include "ThreadPool.h"
 
-static constexpr int MAX_C = 128;
-static constexpr int MAX_D = 20;
+// Maximum constants for array sizes
+static constexpr int MAX_C = 128;  // Maximum number of distinct differences
+static constexpr int MAX_D = 20;   // Maximum density for the problem
 
 class DcGenerator {
-private:
-    const int N;
-    const int D;
-    const int ND;
-    const int D1;
-    const int N2;
-    const int N1;
+  private:
+    const int N;  // Total number of elements
+    const int D;  // Density of the problem
+    const int ND; // N - D
+    const int D1; // D - 1
+    const int N2; // N / 2
+    const int N1; // N2 - D*D1/2 (threshold for valid configurations)
 
-    int a[MAX_D];
-    int b[MAX_D];
-    int differences[MAX_C];
-    // int count;
+    int a[MAX_D];  // Array to store current configuration
+    int b[MAX_D];  // Array to store auxiliary information
+    int differences[MAX_C];  // Array to track differences between elements
+    // int count;  // Commented out count variable
 
-public:
+  public:
+    // Constructor initializes the generator with parameters n, d, and starting value j
     DcGenerator(int n, int d, int j)
         : N(n), D(d), ND(N - D), N2(N / 2), D1(D - 1), N1(N2 - D * D1 / 2) {
         // Initialize arrays to zero
@@ -49,28 +52,30 @@ public:
         std::memset(b, 0, sizeof(b));
         std::memset(differences, 0, sizeof(differences));
 
-        a[D] = N; // for printing only
-        a[0] = 0; // for computing
-        a[1] = j;
-        b[1] = 1;
-        differences[0] = 1;
+        a[D] = N;  // Sentinel value for printing
+        a[0] = 0;  // Base value for computations
+        a[1] = j;  // Starting value
+        b[1] = 1;   // Initial auxiliary value
+        differences[0] = 1;  // Difference of 0 is always present
     }
 
-    inline void step_forward(int t, int& count) {
+    // Updates the difference counts when moving forward in the generation
+    inline void step_forward(int t, int &count) {
         const int at = a[t];
         for (int j = 0; j < t; ++j) {
             const int aj = a[j];
-            const int p_diff = at - aj;
-            const int n_diff = N - p_diff;
-            const int diff = p_diff < n_diff ? p_diff : n_diff;
+            const int p_diff = at - aj;  // Positive difference
+            const int n_diff = N - p_diff;  // Negative difference (modular)
+            const int diff = p_diff < n_diff ? p_diff : n_diff;  // Minimum difference
 
             // Note that p_diff may be equal to n_diff
             if (differences[diff]++ == 0) {
-                ++count;
+                ++count;  // Increment count if this is a new unique difference
             }
         }
     }
 
+    // Reverts the difference counts when backtracking
     inline void step_backward(int t) {
         const int at = a[t];
         for (int j = 0; j < t; ++j) {
@@ -78,7 +83,7 @@ public:
             const int p_diff = at - aj;
             const int n_diff = N - p_diff;
             const int diff = p_diff < n_diff ? p_diff : n_diff;
-            --differences[diff];
+            --differences[diff];  // Decrement the difference count
             // Note that p_diff may be equal to n_diff
             // if (--differences[diff] == 0) {
             //     --count;
@@ -86,25 +91,27 @@ public:
         }
     }
 
+    // Prints the valid configuration when found
     void PrintD(int p, int count) {
         /* Determine minimum position for next bit */
         const int Dp = D % p;
         const int next = (D / p) * a[p] + a[Dp];
-        if (next < N) return;
+        if (next < N) return;  // Skip if not a complete configuration
 
         /* Determine last bit */
         int min = 1;
-        if (next == N) { 
+        if (next == N) {
             min = Dp != 0 ? b[Dp] + 1 : b[p];
         }
 
-        if (min != 1) return;
-        
+        if (min != 1) return;  // Skip if not minimal
+
+        // Check if we have enough unique differences
         step_forward(D1, count);
         if (count >= N2) {
             printf("\n");
             for (int i = 1; i <= D; ++i) {
-                printf("%3d ", a[i]);
+                printf("%3d ", a[i]);  // Print the valid configuration
             }
             printf("\n");
             fflush(stdout);
@@ -112,19 +119,22 @@ public:
         step_backward(D1);
     }
 
+    // Recursive generation function for the configurations
     void GenD(int t, int p, int count) {
-        if (t >= D1) {
+        if (t >= D1) {  // Base case: reached depth D-1
             PrintD(p, count);
             return;
         }
 
-        const int t_1 = t + 1;        
-        step_forward(t, count);
-        
+        const int t_1 = t + 1;
+        step_forward(t, count);  // Update differences for current position
+
+        // Continue if we still have enough unique differences
         if (count >= N1 + t * t_1 / 2) {
             int tail = ND + t_1;
             const int max = a[t_1 - p] + a[p];
 
+            // Try the maximum possible value first
             if (max <= tail) {
                 a[t_1] = max;
                 b[t_1] = b[t_1 - p];
@@ -132,21 +142,24 @@ public:
                 tail = max - 1;
             }
 
+            // Try all other possible values in descending order
             for (int j = tail; j >= a[t] + 1; --j) {
                 a[t_1] = j;
                 b[t_1] = 1;
                 GenD(t_1, t_1, count);
             }
         }
-        step_backward(t);
+        step_backward(t);  // Backtrack the difference counts
     }
 
+    // Initial generation function that starts the process
     void Gen11() {
         int count = 0;
-        step_forward(1, count);
+        step_forward(1, count);  // Initialize with first element
         int tail = ND + 2;
         const int max = a[1] + a[1];
 
+        // Try the maximum possible value first
         if (max <= tail) {
             a[2] = max;
             b[2] = b[1];
@@ -154,6 +167,7 @@ public:
             tail = max - 1;
         }
 
+        // Try all other possible values in descending order
         for (int j = tail; j >= a[1] + 1; --j) {
             a[2] = j;
             b[2] = 1;
@@ -162,22 +176,23 @@ public:
         // step_backward(1);
     }
 
-    static void usage() {
-        printf("Usage: necklace [n] [d] (n>=3, d>=3, n>=d*(d-1)+1)\n");
-    }
+    // Display usage information
+    static void usage() { printf("Usage: necklace [n] [d] (n>=3, d>=3, n>=d*(d-1)+1)\n"); }
 };
 
+// Initialize parallel computation with thread pool
 void InitParallel(int N, int D) {
     const unsigned num_workers = std::thread::hardware_concurrency();
     ThreadPool pool(num_workers);
-    printf("Number of workers: %u\n", num_workers);
+    printf("Number of workers: %u\n", num_workers * 3 / 4);
 
     std::vector<std::future<void>> results;
-    results.reserve((N + 1)/2 - (N - 1)/D); // Pre-allocate space
+    results.reserve((N + 1) / 2 - (N - 1) / D);  // Pre-allocate space
 
     const int start = (N + 1) / 2;
     const int end = (N - 1) / D + 1;
 
+    // Enqueue work items for each starting value in parallel
     for (int j = start; j >= end; --j) {
         results.emplace_back(pool.enqueue([N, D, j]() {
             DcGenerator generator(N, D, j);
@@ -186,9 +201,9 @@ void InitParallel(int N, int D) {
     }
     int countdown = start - end;
     for (auto &result : results) {
-        printf("%3d\r", countdown--);
+        printf("%3d\r", countdown--);  // Display progress
         fflush(stdout);
-        result.get();
+        result.get();  // Wait for completion
     }
     printf("\n");
 }
@@ -202,12 +217,13 @@ int main(int argc, const char *argv[]) {
     int N = atoi(argv[1]);
     int D = atoi(argv[2]);
 
+    // Validate input parameters
     if (N < 3 || D < 3 || N > D * (D - 1) + 1) {
         DcGenerator::usage();
         return 1;
     }
 
-    InitParallel(N, D);
+    InitParallel(N, D);  // Start parallel computation
     printf("Finished successfully\n");
     return 0;
 }
