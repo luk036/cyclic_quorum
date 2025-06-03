@@ -1,3 +1,34 @@
+/**
+
+**diff_cover.cpp**
+
+This program is designed to find special mathematical arrangements called "difference covers" or "difference sets." Think of it as a puzzle solver that looks for specific patterns in numbers.
+
+**Purpose of the Code**
+
+The program searches for sets of numbers that have a unique mathematical property: when you calculate all possible differences between pairs of numbers in the set, those differences cover a wide range of values without too much repetition. This is similar to finding a special combination of numbers where their spacing creates an optimal pattern. These mathematical structures have applications in areas like coding theory, cryptography, and signal processing.
+
+**Input and Output**
+
+The program takes two command-line arguments: N (the total range of numbers to work with) and D (how many numbers to include in each set). For example, if you run the program with N=15 and D=5, it will look for sets of 5 numbers within the range 0 to 14. The program validates that N is at least 3, D is at least 3, and that N doesn't exceed D*(D-1)+1, which ensures the mathematical problem has valid solutions.
+
+When the program finds valid arrangements, it prints them to the screen as rows of numbers. Each row represents one valid difference cover that meets the mathematical criteria. The program also displays progress information, including how many worker threads it's using and a countdown showing how much work remains.
+
+**How It Achieves Its Purpose**
+
+The program uses a sophisticated recursive search algorithm combined with parallel processing. The main logic is contained in the DcGenerator class, which systematically explores all possible combinations of numbers. It starts with a base configuration and then tries different values for each position, checking at each step whether the current partial solution could lead to a valid complete solution.
+
+The algorithm uses several optimization techniques to avoid wasting time on impossible solutions. It maintains arrays to track which differences have already been seen and counts how many unique differences exist. Before exploring deeper into a potential solution, it checks whether there are enough unique differences to possibly reach a valid final answer. If not, it abandons that path early and tries a different approach.
+
+**Important Logic Flows and Data Transformations**
+
+The program follows a generate-and-test approach with intelligent pruning. It builds potential solutions incrementally, adding one number at a time to the current set. For each new number added, it calculates all the differences between this number and the previously selected numbers, updating its internal tracking of which differences have been seen.
+
+The core algorithm uses backtracking, which means when it reaches a dead end (a partial solution that cannot lead to a valid complete solution), it backs up and tries different choices. The step_forward and step_backward functions manage this process by updating and reverting the difference counts as the algorithm explores and backtracks.
+
+To speed up the computation, the program uses parallel processing through a thread pool. It divides the work by having different threads start their searches from different initial values. This allows multiple CPU cores to work on the problem simultaneously, significantly reducing the total time needed to find all solutions. The program coordinates these parallel workers and displays progress as they complete their assigned portions of the search space.
+*/
+
 /*
  * Copyright (c) 2019 Joe Sawada
  *
