@@ -162,7 +162,7 @@ class DcGenerator {
         // step_backward(1);
     }
 
-    static void usage() { printf("Usage: necklace [n] [d] (n>=3, d>=3, n>=d*(d-1)+1)\n"); }
+    static void usage() { printf("Usage: necklace [n] [d] (n>=3, d>=3, n<=d*(d-1)+1)\n"); }
 };
 
 void InitParallel(int N, int D) {

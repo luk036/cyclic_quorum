@@ -177,7 +177,7 @@ class DcGenerator {
     }
 
     // Display usage information
-    static void usage() { printf("Usage: necklace [n] [d] (n>=3, d>=3, n>=d*(d-1)+1)\n"); }
+    static void usage() { printf("Usage: necklace [n] [d] (n>=3, d>=3, n<=d*(d-1)+1)\n"); }
 };
 
 // Initialize parallel computation with thread pool
