@@ -85,7 +85,7 @@ This approach combines the power of artificial intelligence with parallel comput
 constexpr int HIDDEN_SIZE1 = 256;  // Number of neurons in first hidden layer
 constexpr int HIDDEN_SIZE2 = 128;  // Number of neurons in second hidden layer
 constexpr float LEARNING_RATE = 0.01;  // Learning rate for gradient descent
-constexpr float GAMMA = 0.99;  // Discount factor for future rewards
+constexpr float GAMMA = 0.98;  // Discount factor for future rewards
 constexpr int MAX_EPISODES = 1000000000;  // Maximum training episodes
 constexpr int NUM_THREADS = 10;  // Number of threads to use for parallel training
 

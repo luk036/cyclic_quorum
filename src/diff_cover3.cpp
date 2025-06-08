@@ -1,4 +1,34 @@
 /*
+**diff_cover3.cpp**
+
+This code is a mathematical program that searches for special number sequences called "difference covers." A difference cover is a set of numbers where the differences between any two numbers in the set can represent all possible values within a certain range. Think of it like finding a minimal set of positions on a number line such that the distances between these positions cover all the gaps you might need.
+
+**Purpose and Input**
+
+The program takes two command-line arguments: N (the range size) and D (the size of the difference cover set). For example, if you run the program with N=15 and D=5, it will search for sets of 5 numbers within the range 0 to 14 that form valid difference covers. The program has built-in constraints requiring both N and D to be at least 3, and N cannot exceed D*(D-1)+1.
+
+**Output**
+
+When the program finds valid difference covers, it prints them as sequences of numbers. Each valid sequence is displayed on a separate line, showing the D numbers that make up the difference cover. The program also displays progress information, including the number of worker threads being used and a countdown showing how many search tasks remain.
+
+**How It Works**
+
+The program uses a sophisticated backtracking algorithm implemented in the `DcGenerator` class. This algorithm systematically builds potential difference covers one number at a time, checking at each step whether the partial sequence could lead to a valid complete difference cover. The core idea is to maintain arrays that track which numbers have been used (`q` array) and which difference values have been covered (`differences` array).
+
+The algorithm starts with a fixed first number and then tries different possibilities for subsequent positions. For each potential number it might add to the sequence, it calculates what new differences would be created and checks if adding this number brings the sequence closer to covering all required differences. If a partial sequence looks promising (meaning it has covered enough differences for its current length), the algorithm continues building on it. If not, it backtracks and tries a different number.
+
+**Key Logic Flow**
+
+The program employs parallel processing to speed up the search. It divides the work by trying different starting values simultaneously across multiple threads. Each thread runs its own instance of the search algorithm (`BraceFD11` method), which recursively explores possible sequences using the `BraceFD` method.
+
+Two critical functions manage the search state: `step_forward` adds a new number to the current sequence and updates the count of covered differences, while `step_backward` removes a number and undoes those updates. This allows the algorithm to efficiently explore and backtrack through the search space.
+
+The program also includes symmetry-breaking optimizations through the `CheckRev` function, which helps avoid generating equivalent sequences that are just mirror images of each other. This significantly reduces the search space without missing any fundamentally different solutions.
+
+When a complete sequence of D numbers is built, the `PrintD` function performs final validation checks to ensure it forms a proper difference cover before printing it as output. The program continues until all possible valid difference covers for the given parameters have been found and displayed.
+*/
+
+/*
  * Copyright (c) 2019 Joe Sawada
  *
  * This program is free software: you can redistribute it and/or modify
@@ -238,7 +268,7 @@ class DcGenerator {
 void InitParallel(int N, int D) {
     const unsigned num_workers = std::thread::hardware_concurrency();
     ThreadPool pool(num_workers);
-    printf("Number of workers: %u\n", num_workers * 3 / 4);
+    printf("Number of workers: %u\n", num_workers / 2);
 
     std::vector<std::future<void>> results;
     results.reserve((N + 1) / 2 - (N - 1) / D);  // Pre-allocate space

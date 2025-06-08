@@ -215,7 +215,7 @@ class DcGenerator {
 void InitParallel(int N, int D) {
     const unsigned num_workers = std::thread::hardware_concurrency();
     ThreadPool pool(num_workers);
-    printf("Number of workers: %u\n", num_workers * 3 / 4);
+    printf("Number of workers: %u\n", num_workers / 2);
 
     std::vector<std::future<void>> results;
     results.reserve((N + 1) / 2 - (N - 1) / D);  // Pre-allocate space
