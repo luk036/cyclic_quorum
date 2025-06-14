@@ -13,9 +13,15 @@ The utility of Cyclic Quorum Systems extends beyond their original application i
 *   **Wireless Sensor Networks (WSNs):** A variant called CQS-Pair has been developed for heterogeneous wakeup scheduling in WSNs, enabling nodes with different power-saving requirements to maintain connectivity.
 *   **Attention Computation in Deep Learning:** CQS-Attention is a novel sequence parallelism scheme leveraging CQS theory to scale the standard self-attention computation for very long sequences in transformer models, addressing the significant memory bottleneck.
 
-This paper provides a survey of Cyclic Quorum Systems, drawing upon the provided source material to explore their theoretical foundations, properties, and applications in these diverse domains. We will delve into the combinatorial concepts underlying CQS construction, examine how they enable efficient distributed algorithms, discuss their role in heterogeneous WSNs, and highlight their recent use in scaling attention mechanisms for long sequences.
-(???)
+The main objective of this paper is to explore the application of difference covers in constructing optimal cyclic quorum systems. Difference covers are a specific type of mathematical structure that can be used to generate cyclic quorum systems. The key idea is to use the differences between the elements of a difference cover to construct a cyclic quorum system. This approach allows for the construction of quorum systems with a wide range of properties, including equal work, equal responsibility, and other desirable characteristics.
 
+Difference covers, also known as difference sets, are special mathematical arrangements or sets of numbers that possess a unique property: the differences between any two numbers within the set cover a wide range of values, ideally every possible remainder when divided by a given $N$, without excessive repetition. These mathematical structures are not merely theoretical constructs but have practical significance in various fields, including coding theory, cryptography, and signal processing. The problem involves selecting exactly $d$ numbers from a total range of 0 to $N$-1. 
+Previously, Table 1 and Table 2 in list base quorums (denoted $B_1$ using 1-based indexing for sites, $B_1=\{a_1, \dots, a_d\}$) for optimal cyclic quorum schemes for $N$ from 4 to 111. 
+In this paper, we attempt to extend the search for optimal cyclic quorum schemes to $N=150$ and beyond.
+
+This paper explores two distinct computational approaches for finding these structures: a systematic recursive search algorithm and a trial-and-error method based on reinforcement learning. Both approaches leverage parallel processing to enhance their efficiency in tackling this combinatorial challenge.
+
+The rest of the paper is organized as follows: Section 2 provides the necessary background on quorum systems, difference covers, and related concepts. Section 3 presents the proposed algorithms for constructing cyclic quorum systems. Section 4 discusses the experimental results and their implications. Finally, Section 5 concludes the paper and outlines potential future research directions.
 
 ## 2. Preliminaries
 
@@ -112,7 +118,25 @@ The applications of CQS span diverse areas of distributed systems and computatio
 
 The core strengths of CQS lie in their elegant mathematical structure, which translates into practical advantages such as simplified management, robustness, compatibility with other optimizations, and flexibility. While challenges remain, such as efficiently finding optimal base quorums for arbitrary system sizes, and addressing potential bottlenecks in centralized architectures, the research presented in this paper highlights the significant potential of CQS.
 
-## Generating Fixed-Density Necklaces and Bracelets Efficiently
+## Finding Difference Covers: Exhaustive Search vs. Deep Reinforcement Learning
+
+In this section, we delve into the difference cover problem, a combinatorial problem that has been studied extensively in the field of mathematics and computer science. The problem is to find a subset of a given set of numbers that, when paired with the original set, covers all possible differences between the numbers. This problem has applications in various fields, including cryptography, coding theory, and distributed systems.
+
+### The Difference Cover Problem Defined
+
+At its core, the difference cover problem is a puzzle about finding a specific subset of numbers. Given a total range of numbers from 0 to $N$-1 and a required set size $d$, the task is to select $d$ numbers such that the positive differences between every unique pair of selected numbers modulo $N$ include all possible values from 1 to $N$-1 at least once. The problem can be visualized as placing $d$ markers on a circle with $N$ points (representing 0 to $N$-1) such that the distances between pairs of markers cover all possible distances around the circle.
+
+The sources specify certain constraints for valid inputs ($N$, $d$). Both $N$ and $d$ must be at least 3. Additionally, $N$ cannot exceed the value $d$($d$-1)+1. These constraints ensure that the mathematical problem is well-defined and potentially has solutions.
+
+Valid solutions, when found, are typically printed as sequences of the $d$ numbers that constitute the difference cover. Progress information, such as the number of worker threads used and the remaining workload, is also displayed.
+
+### Approach 1: Recursive Search (diff_cover.cpp / diff_cover3.cpp)
+
+The first approach employs a **systematic, algorithmic method** to find difference covers. It is described as a "puzzle solver" that searches for these special mathematical arrangements. This method is based on a **sophisticated recursive search algorithm combined with parallel processing**. The core logic resides in the `DcGenerator` class. This approach follows a **generate-and-test methodology with intelligent pruning**.
+
+The process involves **building potential solutions incrementally**, adding one number at a time to the current set. As each new number is added, the algorithm calculates all the differences between this new number and the previously selected numbers, updating its internal tracking of which differences have been seen.
+
+### Generating Fixed-Density Necklaces and Bracelets Efficiently
 
 The generation of discrete combinatorial objects is of immense importance in both mathematics and computer science, finding wide-ranging applications in fields such as computational biology, combinatorial chemistry, operations research, and data mining. Exhaustively listing these objects allows for their study and utilization in various practical scenarios, such as the calibration of colour printers, which specifically uses exhaustive lists of bracelets. To be truly useful in applications, algorithms for generating such objects must be highly efficient, ideally running in Constant Amortized Time (CAT). A CAT algorithm is one where the total number of basic operations performed is proportional to the number of objects generated, meaning that, on average, each successive object is generated in constant time. This efficiency is extremely desirable in generation algorithms.
 
@@ -233,23 +257,6 @@ The described scheme has been implemented in C and is available from the authors
 In summary, the presented work provides a significant step in the field of combinatorial generation by offering a provably efficient method for listing fixed-density bracelets, objects important in various applications, thereby extending the capabilities of efficient combinatorial algorithms beyond unrestricted or fixed-content cases for this class of structures.
 
 
-## Finding Difference Covers: Exhaustive Search vs. Deep Reinforcement Learning
-
-Difference covers, also known as difference sets, are special mathematical arrangements or sets of numbers that possess a unique property: the differences between any two numbers within the set cover a wide range of values, ideally every possible remainder when divided by a given N, without excessive repetition. These mathematical structures are not merely theoretical constructs but have practical significance in various fields, including coding theory, cryptography, and signal processing. The problem involves selecting exactly D numbers from a total range of 0 to N-1. This essay explores two distinct computational approaches for finding these structures: a systematic recursive search algorithm and a trial-and-error method based on reinforcement learning. Both approaches leverage parallel processing to enhance their efficiency in tackling this combinatorial challenge.
-
-### The Difference Cover Problem Defined
-
-At its core, the difference cover problem is a puzzle about finding a specific subset of numbers. Given a total range of numbers from 0 to N-1 and a required set size D, the task is to select D numbers such that the positive differences between every unique pair of selected numbers modulo N include all possible values from 1 to N-1 at least once (or cover "every possible remainder when divided by N" in the RL context). The problem can be visualized as placing D markers on a circle with N points (representing 0 to N-1) such that the distances between pairs of markers cover all possible distances around the circle.
-
-The sources specify certain constraints for valid inputs (N, D). Both N and D must be at least 3. Additionally, N cannot exceed the value D*(D-1)+1. These constraints ensure that the mathematical problem is well-defined and potentially has solutions.
-
-Valid solutions, when found, are typically printed as sequences of the D numbers that constitute the difference cover. Progress information, such as the number of worker threads used and the remaining workload, is also displayed.
-
-### Approach 1: Recursive Search (diff_cover.cpp / diff_cover3.cpp)
-
-The first approach employs a **systematic, algorithmic method** to find difference covers. It is described as a "puzzle solver" that searches for these special mathematical arrangements. This method is based on a **sophisticated recursive search algorithm combined with parallel processing**. The core logic resides in the `DcGenerator` class. This approach follows a **generate-and-test methodology with intelligent pruning**.
-
-The process involves **building potential solutions incrementally**, adding one number at a time to the current set. As each new number is added, the algorithm calculates all the differences between this new number and the previously selected numbers, updating its internal tracking of which differences have been seen.
 
 A critical technique used is **backtracking**. This means that when the algorithm reaches a **dead end** – a partial solution that cannot possibly lead to a valid complete solution – it backs up, undoes the last choice, and tries a different one. The `step_forward` and `step_backward` functions are central to managing this process, updating and reverting the difference counts as the algorithm explores and backtracks through the search space.
 
@@ -263,7 +270,7 @@ The `step_backward` function mirrors `step_forward`. Given the index `t` of a nu
 
 **Conceptual Example of Step Forward/Backward (Illustrative, not from source trace):**
 
-Imagine trying to find a difference cover for N=5, D=3.
+Imagine trying to find a difference cover for $N$=5, D=3.
 Start with the first number, typically 0. `a = [0, ?, ?, ?, 5]`.
 The first choice is `a`. Let's say the algorithm tries `a = 1`.
 Call `step_forward(1, count)`. `a` is 1, `a` is 0.
@@ -274,14 +281,14 @@ Next, try `a`. Let's say the algorithm tries `a = 3`.
 Call `step_forward(2, count)`. `a` is 3.
 Check against `a=0`: `p_diff=3`, `n_diff=2`, `diff=2`. `differences` incremented. If it was 0, `count` increases.
 Check against `a=1`: `p_diff=2`, `n_diff=3`, `diff=2`. `differences` incremented again.
-Current set is {0, 1, 3}. Differences are 1-0=1, 3-0=3, 3-1=2. Modulo 5, these are 1, 3, 2. The negative differences are 0-1=4, 0-3=2, 1-3=3. Modulo 5, these are 4, 2, 3. The unique positive/modular differences are {1, 2, 3, 4}. We need to cover {1, 2, 3, 4} for N=5. Here, {1, 2, 3, 4} are covered. This set {0, 1, 3} is a solution.
+Current set is {0, 1, 3}. Differences are 1-0=1, 3-0=3, 3-1=2. Modulo 5, these are 1, 3, 2. The negative differences are 0-1=4, 0-3=2, 1-3=3. Modulo 5, these are 4, 2, 3. The unique positive/modular differences are {1, 2, 3, 4}. We need to cover {1, 2, 3, 4} for $N$=5. Here, {1, 2, 3, 4} are covered. This set {0, 1, 3} is a solution.
 If {0, 1, 3} wasn't a solution, and the algorithm needed to backtrack from `a=3`, it would call `step_backward(2)`.
 `step_backward(2)`: `a` is 3.
 Check against `a=0`: `p_diff=3`, `n_diff=2`, `diff=2`. `differences` is decremented.
 Check against `a=1`: `p_diff=2`, `n_diff=3`, `diff=2`. `differences` is decremented.
 The state is reverted to where only {0, 1} were chosen, and the algorithm tries a different value for `a`.
 
-The `PrintD` function is called when the algorithm reaches a depth where D-1 numbers have been selected (i.e., position `D1`). It performs final validation checks, including ensuring the configuration is "minimal" and checking if the number of unique differences (`count`) is at least `N2` (`N / 2`). If these checks pass, the found difference cover (`a` to `a[D]`) is printed. Note that the modular differences are often considered up to N/2 because if a difference `d` exists, the difference `N-d` also exists between the same two numbers in reverse order. Covering all differences up to N/2 is sufficient to cover all N-1 non-zero differences modulo N for odd N, and N/2 for even N if the difference N/2 is covered. The threshold `N2` is used in the check. The `PrintD` function calls `step_forward` with `D1` to update the final difference counts for the complete set before checking the `N2` condition, and then `step_backward` with `D1` to revert the counts, allowing the search to continue.
+The `PrintD` function is called when the algorithm reaches a depth where D-1 numbers have been selected (i.e., position `D1`). It performs final validation checks, including ensuring the configuration is "minimal" and checking if the number of unique differences (`count`) is at least `N2` (`N / 2`). If these checks pass, the found difference cover (`a` to `a[D]`) is printed. Note that the modular differences are often considered up to N/2 because if a difference `d` exists, the difference `N-d` also exists between the same two numbers in reverse order. Covering all differences up to N/2 is sufficient to cover all N-1 non-zero differences modulo $N$ for odd $N$, and $N$/2 for even $N$ if the difference $N$/2 is covered. The threshold `N2` is used in the check. The `PrintD` function calls `step_forward` with `D1` to update the final difference counts for the complete set before checking the `N2` condition, and then `step_backward` with `D1` to revert the counts, allowing the search to continue.
 
 Symmetry-breaking optimizations are included, particularly via the `CheckRev` function. This helps to avoid generating and checking equivalent sequences that are simply mirror images or rotations of each other, significantly reducing the search space without missing unique solutions. The `CheckRev` function compares the current partial sequence (`a` up to index `t_1`) with its reversal. It iterates from the second element (`a`) up to the midpoint (`t_1 / 2`) and compares elements `q[j]` with `q[t_1 - j]`. It returns 1 if the current sequence is lexicographically less than its reverse, -1 if greater, and 0 if they are equal up to that point. This optimization is crucial in generating bracelets with fixed density, which is related to the problem being solved. The `BraceFD` and `BraceFD11` functions seem to implement this bracelet generation logic within the difference cover search.
 
