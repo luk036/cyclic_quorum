@@ -1,5 +1,9 @@
 # Finding Optimal Cyclic Quorum Systems by Exhaustive Search and Deep Reinforcement Learning
 
+## Abstract
+
+Difference covers are a specific type of mathematical structure that can be used to generate cyclic quorum systems. The key idea is to use the differences between the elements of a difference cover to construct a cyclic quorum system. This approach allows for the construction of quorum systems with a wide range of properties, including equal work, equal responsibility, and other desirable characteristics.
+
 ## 1. Introduction
 
 In the realm of distributed computing and related fields, ensuring coordination, consistency, and efficient resource utilization among multiple independent entities is paramount. Quorum systems have emerged as a fundamental concept for achieving such goals, particularly in scenarios requiring mutual exclusion or the reliable processing of distributed data. A quorum system is essentially a collection of subsets of participating entities (often referred to as sites or processes), where any two subsets (quorums) must have at least one entity in common. This non-empty intersection property is crucial for guaranteeing that any two operations requiring a quorum will interact at some common point, thereby allowing for conflict detection and resolution.
@@ -13,13 +17,9 @@ The utility of Cyclic Quorum Systems extends beyond their original application i
 *   **Wireless Sensor Networks (WSNs):** A variant called CQS-Pair has been developed for heterogeneous wakeup scheduling in WSNs, enabling nodes with different power-saving requirements to maintain connectivity.
 *   **Attention Computation in Deep Learning:** CQS-Attention is a novel sequence parallelism scheme leveraging CQS theory to scale the standard self-attention computation for very long sequences in transformer models, addressing the significant memory bottleneck.
 
-The main objective of this paper is to explore the application of difference covers in constructing optimal cyclic quorum systems. Difference covers are a specific type of mathematical structure that can be used to generate cyclic quorum systems. The key idea is to use the differences between the elements of a difference cover to construct a cyclic quorum system. This approach allows for the construction of quorum systems with a wide range of properties, including equal work, equal responsibility, and other desirable characteristics.
+The main objective of this paper is to explore the application of difference covers in constructing optimal cyclic quorum systems. Difference covers, also known as difference sets, are special mathematical arrangements or sets of numbers that possess a unique property: the differences between any two numbers within the set cover a wide range of values, ideally every possible remainder when divided by a given $N$, without excessive repetition. The problem involves selecting exactly $d$ numbers from a total range of 0 to $N$-1. Previously, Table 1 and Table 2 in list base quorums (denoted $B_1$ using 1-based indexing for sites, $B_1=\{a_1, \dots, a_d\}$) for optimal cyclic quorum schemes for $N$ from 4 to 111. In this paper, we attempt to extend the search for optimal cyclic quorum schemes to $N=150$ and beyond.
 
-Difference covers, also known as difference sets, are special mathematical arrangements or sets of numbers that possess a unique property: the differences between any two numbers within the set cover a wide range of values, ideally every possible remainder when divided by a given $N$, without excessive repetition. These mathematical structures are not merely theoretical constructs but have practical significance in various fields, including coding theory, cryptography, and signal processing. The problem involves selecting exactly $d$ numbers from a total range of 0 to $N$-1. 
-Previously, Table 1 and Table 2 in list base quorums (denoted $B_1$ using 1-based indexing for sites, $B_1=\{a_1, \dots, a_d\}$) for optimal cyclic quorum schemes for $N$ from 4 to 111. 
-In this paper, we attempt to extend the search for optimal cyclic quorum schemes to $N=150$ and beyond.
-
-This paper explores two distinct computational approaches for finding these structures: a systematic recursive search algorithm and a trial-and-error method based on reinforcement learning. Both approaches leverage parallel processing to enhance their efficiency in tackling this combinatorial challenge.
+This paper explores two distinct computational approaches for finding these structures: a systematic recursive search algorithm and a trial-and-error method based on deep reinforcement learning. Both approaches leverage parallel processing to enhance their efficiency in tackling this combinatorial challenge.
 
 The rest of the paper is organized as follows: Section 2 provides the necessary background on quorum systems, difference covers, and related concepts. Section 3 presents the proposed algorithms for constructing cyclic quorum systems. Section 4 discusses the experimental results and their implications. Finally, Section 5 concludes the paper and outlines potential future research directions.
 
@@ -40,14 +40,12 @@ For distributed algorithms like mutual exclusion, certain additional properties 
 *   **A3. Equal Work:** All quorums in the system have the same size. If $S_i$ is the quorum for site $P_i$, then $|S_i| = d$ for all $i \in \{1, 2, \dots, N\}$, where $d$ is an integer less than $N$. The size of a quorum is often denoted by $d$ or $k$.
 *   **A4. Equal Responsibility:** Each site is contained in the same number of quorums. Specifically, for all $P_i \in U$, $P_i$ is contained in $d$ quorums $S_j$.
 
-A set of quorums satisfying properties A3 and A4 is called **symmetric**. The goal in designing efficient quorum systems for applications like distributed mutual exclusion is to minimize the quorum size $d$ while maintaining these properties.
+A set of quorums satisfying properties A3 and A4 is called **symmetric**. The goal in designing efficient quorum systems is to minimize the quorum size $d$ while maintaining these properties.
 
 Maekawa showed that for a fixed quorum size $d$, the maximum possible number of sites $N$ for which a symmetric quorum system exists is $d(d-1) + 1$, assuming any two quorums intersect at exactly one site. This implies a theoretical lower bound on the quorum size:
-$d \geq \sqrt{N}$. More precisely, the lower bound is $\lceil \sqrt{N} \rceil$. When considering a system with $P$ processes or nodes, the lower bound is similarly $O(\sqrt{P})$.
+$d \geq \sqrt{N}$. More precisely, the lower bound is $\lceil \sqrt{N} \rceil$.
 
-Finding quorum systems that satisfy these properties and approach the minimal size is challenging. The problem of finding such systems for $N = d(d-1) + 1$ is equivalent to finding finite projective planes of order $d-1$, and the existence of such planes is not guaranteed for all orders (e.g., order 10). Exhaustive search methods to find optimal quorum systems are computationally intractable for large $N$. This difficulty has motivated the development of systematic construction methods, such as those based on grid structures or combinatorial designs like difference sets.
-
-Grid-based quorum systems, for instance, logically organize sites in a grid (e.g., square or triangle). In a square grid system with $N$ sites ($N$ being a perfect square), a quorum for a site includes all sites in the same row and column, resulting in a quorum size of $2\sqrt{N} - 1$. While simple and geometrically evident, this is roughly twice the theoretical lower bound and often leads to pairs of quorums intersecting at two sites. Variations like "triangle" grid systems aim to reduce the quorum size, but may struggle with maintaining the equal responsibility property.
+Finding quorum systems that satisfy these properties and approach the minimal size is challenging. The problem of finding such systems for $N = d(d-1) + 1$ is equivalent to finding finite projective planes of order $d-1$, and the existence of such planes is not guaranteed for all orders (e.g., order 10). Exhaustive search methods to find optimal quorum systems are computationally intractable for large $N$. This difficulty has motivated the development of systematic construction methods, such as those based on combinatorial designs like difference sets.
 
 The challenges associated with finding truly optimal, symmetric quorum systems for arbitrary numbers of sites highlight the value of structured approaches that leverage combinatorial properties, such as the Cyclic Quorum Systems discussed next.
 
@@ -74,10 +72,10 @@ A set $M = \{a_1, a_2, \dots, a_d\} \subseteq \{0, 1, \dots, N-1\}$ is called a 
 
 The connection between cyclic quorum systems and relaxed difference sets is formalized in Theorem 2 and Theorem 3 of (Theorem 2 and Theorem 3 in and Definition 2 and Theorem 3 in). These theorems establish that a set $A = \{a_0, \dots, a_d\} \pmod P$ is a relaxed $(P, d)$-difference set if and only if the cyclic quorum set defined by $S_i = \{a_0 + i, \dots, a_d + i\} \pmod P$ satisfies the non-empty intersection property. The intuition relies on the fact that the intersection property $S_i \cap S_j \neq \emptyset$ for all $i, j$ is equivalent to requiring that for any difference $m = j - i \pmod P$, there exist elements $a_u, a_v \in A$ such that $a_u + i \equiv a_v + j \pmod P$, which simplifies to $a_u - a_v \equiv j - i \pmod P \equiv m \pmod P$. This means every possible non-zero difference modulo $N$ must be formed by at least one pair of elements in the base quorum's set.
 
-Finding a base quorum $B_0$ that forms a cyclic quorum system with the minimum size $d$ is equivalent to finding a relaxed $(N, d)$-difference set with minimum $d$. For cases where $N = d^2 - d + 1$ and $d-1$ is a prime power, the existence of cyclic $(N, d, 1)$-difference sets (known as Singer difference sets) is guaranteed, and these sets form cyclic quorum systems where any two quorums intersect at exactly one site. Singer difference sets lead to particularly efficient CQS with no redundancy in pair coverage (discussed later). For other values of $N$, finding the optimal base quorum often requires exhaustive search, although methods based on the Multiplier Theorem can speed up the construction of certain types of difference sets. The Multiplier Theorem provides conditions under which a prime $p$ is a "multiplier" of a difference set, meaning multiplication by $p$ permutes the elements of the difference set, aiding in their discovery.
+Finding a base quorum $B_0$ that forms a cyclic quorum system with the minimum size $d$ is equivalent to finding a relaxed $(N, d)$-difference set with minimum $d$. For cases where $N = d(d - 1) + 1$ and $d-1$ is a prime power, the existence of cyclic $(N, d, 1)$-difference sets (known as Singer difference sets) is guaranteed, and these sets form cyclic quorum systems where any two quorums intersect at exactly one site. Singer difference sets lead to particularly efficient CQS with no redundancy in pair coverage (discussed later). For other values of $N$, finding the optimal base quorum often requires exhaustive search, although methods based on the Multiplier Theorem can speed up the construction of certain types of difference sets. The Multiplier Theorem provides conditions under which a prime $p$ is a "multiplier" of a difference set, meaning multiplication by $p$ permutes the elements of the difference set, aiding in their discovery.
 
 Examples of cyclic quorum systems and difference sets include:
-*   For $N=7$, the set $\{1, 2, 4\} \pmod 7$ is a cyclic $(7, 3, 1)$-difference set. This is a Singer difference set ($7 = 3^2 - 3 + 1$, $3-1=2$ is prime power). The cyclic quorums are $\{1, 2, 4\}$, $\{2, 3, 5\}$, $\{3, 4, 6\}$, $\{4, 5, 0\}$, $\{5, 6, 1\}$, $\{6, 0, 2\}$, $\{0, 1, 3\}$.
+*   For $N=7$, the set $\{1, 2, 4\} \pmod 7$ is a cyclic $(7, 3, 1)$-difference set. This is a Singer difference set ($7 = 3(3 - 1) + 1$, $3-1=2$ is prime power). The cyclic quorums are $\{1, 2, 4\}$, $\{2, 3, 5\}$, $\{3, 4, 6\}$, $\{4, 5, 0\}$, $\{5, 6, 1\}$, $\{6, 0, 2\}$, $\{0, 1, 3\}$.
 *   For $N=8$, the set $\{0, 1, 2, 4\} \pmod 8$ is a base quorum. The quorums are $B_0 = \{0, 1, 2, 4\}$, $B_1 = \{1, 2, 3, 5\}$, $B_2 = \{2, 3, 4, 6\}$, $B_3 = \{3, 4, 5, 7\}$, $B_4 = \{4, 5, 6, 0\}$, $B_5 = \{5, 6, 7, 1\}$, $B_6 = \{6, 7, 0, 2\}$, $B_7 = \{7, 0, 1, 3\}$.
 *   Table 1 and Table 2 in list base quorums (denoted $B_1$ using 1-based indexing for sites, $B_1=\{a_1, \dots, a_d\}$) for optimal cyclic quorum schemes for $N$ from 4 to 111, found through exhaustive search. For example, for $N=4$, the base quorum is $\{1, 2, 3\}$. For $N=10$, the base quorum is $\{1, 2, 3, 6\}$.
 
@@ -85,7 +83,7 @@ The existence of cyclic quorum systems with sizes close to the theoretical lower
 
 **Example of a Cyclic Quorum System Construction**
 
-Let's construct a cyclic quorum system for $N=8$ using the base quorum $B_0 = \{0, 1, 2, 4\} \pmod 8$ ccccsds. The size of the quorum is $d=4$.
+Let's construct a cyclic quorum system for $N=8$ using the base quorum $B_0 = \{0, 1, 2, 4\} \pmod 8$. The size of the quorum is $d=4$.
 The full set of 8 quorums is generated by adding $i \in \{0, 1, \dots, 7\}$ modulo 8 to the elements of $B_0$:
 *   $B_0 = \{0, 1, 2, 4\} \pmod 8$
 *   $B_1 = \{0+1, 1+1, 2+1, 4+1\} \pmod 8 = \{1, 2, 3, 5\} \pmod 8$
@@ -100,57 +98,43 @@ This set of 8 quorums forms a cyclic quorum system for $N=8$. Each quorum has si
 
 The challenge remains in finding the base quorum $\{a_1, \dots, a_d\}$ for a given $N$ such that the resulting cyclic sets satisfy the intersection property and $d$ is minimized.
 
-### CQS in Distributed Mutual Exclusion
+### Historial Context of CQS
 
 The original context where cyclic quorum systems were formally introduced and studied was distributed mutual exclusion. In distributed mutual exclusion, sites in a network need to coordinate access to a shared resource (a critical section) such that only one site can access it at a time. Maekawa's algorithm was one of the first quorum-based algorithms that aimed to achieve symmetry (equal work and equal responsibility) and minimize the quorum size, pointing out the connection to finite projective planes. However, as discussed, finding optimal symmetric quorums for arbitrary numbers of sites proved difficult.
 
 Luk and Wong proposed using cyclic difference sets as a basis for constructing quorum systems for distributed mutual exclusion. Their "cyclic" quorum scheme (which forms the basis for the CQS concept discussed here) constructs symmetric quorum sets for arbitrary $N$. The resulting quorum size is shown to be very close to the theoretical lower bound $\sqrt{N}$. The main challenge in this scheme is finding the optimal base quorum (relaxed difference set) through search, although the search space is smaller compared to general exhaustive searches for arbitrary quorum systems.
 
-### Conclusion and Future Work
-
-Cyclic Quorum Systems (CQS), rooted in the theory of combinatorial designs and difference sets, offer a structured and efficient approach to designing quorum systems with desirable properties such as non-empty intersection, equal work, and equal responsibility. Their cyclic construction from a base quorum simplifies their definition and management.
-
-The applications of CQS span diverse areas of distributed systems and computation:
-*   In **distributed mutual exclusion**, CQS provide symmetric quorum sets with sizes close to the theoretical lower bound for arbitrary numbers of sites.
-*   For **distributed all-pairs algorithms**, CQS possess a unique "all-pairs property" that allows for minimal data replication per processing node ($O(N/\sqrt{P})$ memory footprint) and enables load-balanced computation. Techniques like computation management logic can further improve efficiency by eliminating redundant work without communication overhead.
-*   In **wireless sensor networks**, the CQS-Pair concept extends the utility of CQS to support heterogeneous asynchronous wakeup scheduling, allowing nodes with different power-saving needs to maintain connectivity.
-*   Most recently, **CQS-Attention** demonstrates the power of CQS in scaling the standard self-attention computation for infinitely long sequences in transformer models, providing a memory-efficient ($O(1/W)$ memory ratio per worker) and embarrassingly parallel solution.
-
-The core strengths of CQS lie in their elegant mathematical structure, which translates into practical advantages such as simplified management, robustness, compatibility with other optimizations, and flexibility. While challenges remain, such as efficiently finding optimal base quorums for arbitrary system sizes, and addressing potential bottlenecks in centralized architectures, the research presented in this paper highlights the significant potential of CQS.
-
 ## Finding Difference Covers: Exhaustive Search vs. Deep Reinforcement Learning
 
-In this section, we delve into the difference cover problem, a combinatorial problem that has been studied extensively in the field of mathematics and computer science. The problem is to find a subset of a given set of numbers that, when paired with the original set, covers all possible differences between the numbers. This problem has applications in various fields, including cryptography, coding theory, and distributed systems.
+In this section, we delve into the difference cover problem, a combinatorial problem that has been studied extensively in the field of mathematics and computer science. The problem is to find a subset of a given set of numbers that, when paired with the original set, covers all possible differences between the numbers. 
 
 ### The Difference Cover Problem Defined
 
 At its core, the difference cover problem is a puzzle about finding a specific subset of numbers. Given a total range of numbers from 0 to $N$-1 and a required set size $d$, the task is to select $d$ numbers such that the positive differences between every unique pair of selected numbers modulo $N$ include all possible values from 1 to $N$-1 at least once. The problem can be visualized as placing $d$ markers on a circle with $N$ points (representing 0 to $N$-1) such that the distances between pairs of markers cover all possible distances around the circle.
 
-The sources specify certain constraints for valid inputs ($N$, $d$). Both $N$ and $d$ must be at least 3. Additionally, $N$ cannot exceed the value $d$($d$-1)+1. These constraints ensure that the mathematical problem is well-defined and potentially has solutions.
+For convenience of discussion, we assume that both $N$ and $d$ are at least 3. Additionally, $N$ cannot exceed the value $d$($d$-1)+1. 
 
-Valid solutions, when found, are typically printed as sequences of the $d$ numbers that constitute the difference cover. Progress information, such as the number of worker threads used and the remaining workload, is also displayed.
+### Approach 1: Recursive Search
 
-### Approach 1: Recursive Search (diff_cover.cpp / diff_cover3.cpp)
-
-The first approach employs a **systematic, algorithmic method** to find difference covers. It is described as a "puzzle solver" that searches for these special mathematical arrangements. This method is based on a **sophisticated recursive search algorithm combined with parallel processing**. The core logic resides in the `DcGenerator` class. This approach follows a **generate-and-test methodology with intelligent pruning**.
+The first approach employs a **systematic, algorithmic method** to find difference covers. It searches for these special mathematical arrangements. This approach follows a **generate-and-test methodology with intelligent pruning**.
 
 The process involves **building potential solutions incrementally**, adding one number at a time to the current set. As each new number is added, the algorithm calculates all the differences between this new number and the previously selected numbers, updating its internal tracking of which differences have been seen.
 
 ### Generating Fixed-Density Necklaces and Bracelets Efficiently
 
-The generation of discrete combinatorial objects is of immense importance in both mathematics and computer science, finding wide-ranging applications in fields such as computational biology, combinatorial chemistry, operations research, and data mining. Exhaustively listing these objects allows for their study and utilization in various practical scenarios, such as the calibration of colour printers, which specifically uses exhaustive lists of bracelets. To be truly useful in applications, algorithms for generating such objects must be highly efficient, ideally running in Constant Amortized Time (CAT). A CAT algorithm is one where the total number of basic operations performed is proportional to the number of objects generated, meaning that, on average, each successive object is generated in constant time. This efficiency is extremely desirable in generation algorithms.
+The generation of discrete combinatorial objects is of immense importance in both mathematics and computer science, finding wide-ranging applications in fields such as computational biology, combinatorial chemistry, operations research, and data mining. Exhaustively listing these objects allows for their study and utilization in various practical scenarios. To be truly useful in applications, algorithms for generating such objects must be highly efficient, ideally running in Constant Amortized Time (CAT). A CAT algorithm is one where the total number of basic operations performed is proportional to the number of objects generated, meaning that, on average, each successive object is generated in constant time. This efficiency is extremely desirable in generation algorithms.
 
-Among the fundamental combinatorial objects are strings and their equivalence classes under certain operations. Two key types are necklaces and bracelets, which can be defined over an alphabet of size $k$ (k-ary strings).
+Among the fundamental combinatorial objects are strings and their equivalence classes under certain operations. Two key types are necklaces and bracelets, which can be defined over an alphabet of size $k$ (in our case, $k=2$).
 
 ### Combinatorial Objects: Necklaces, Bracelets, and Fixed Density
 
-A **k-ary necklace** is formally defined as a lexicographically minimal k-ary string that is equivalent under string rotation. This means that a string $a_1a_2 \cdots a_n$ is considered equivalent to any of its rotations, such as $a_ia_{i+1} \cdots a_n a_1 \cdots a_{i-1}$ for $1 < i \le n$. The necklace representation of an equivalence class is the lexicographically smallest string within that class. The set of all k-ary necklaces of length $n$ is denoted $N_k(n)$, and its cardinality is $N_k(n)$. For example, for $k=2$ (binary strings) and $n=4$, the set of necklaces $N_2(4)$ includes {0000, 0001, 0011, 0101, 0111, 1111}. The rotations of 0011 are {0011, 0110, 1100, 1001}, and 0011 is the lexicographically smallest among them, hence it's the necklace.
+A **k-ary necklace** is formally defined as a lexicographically minimal k-ary string that is equivalent under string rotation. This means that a string $a_1 a_2 \cdots a_n$ is considered equivalent to any of its rotations, such as $a_i a_{i+1} \cdots a_n a_1 \cdots a_{i-1}$ for $1 \lt i \le n$. The necklace representation of an equivalence class is the lexicographically smallest string within that class. The set of all k-ary necklaces of length $n$ is denoted $N_k(n)$, and its cardinality is $N_k(n)$. For example, for $k=2$ (binary strings) and $n=4$, the set of necklaces $N_2(4)$ includes {0000, 0001, 0011, 0101, 0111, 1111}. The rotations of 0011 are {0011, 0110, 1100, 1001}, and 0011 is the lexicographically smallest among them, hence it's the necklace.
 
 A related concept is that of **Lyndon words**, which are aperiodic necklaces. An aperiodic necklace is a necklace that is its own shortest Lyndon prefix. The set of k-ary Lyndon words of length $n$ is denoted $L_k(n)$, with cardinality $L_k(n)$. For instance, $L_2(4) = \{0001, 0011, 0111\}$.
 
 A **prenecklace** is a prefix of some necklace. The set of all k-ary prenecklaces of length $n$ is denoted $P_k(n)$, with cardinality $P_k(n)$. For example, $P_2(4) = N_2(4) \cup \{0010, 0110\}$.
 
-**Bracelets** are a variation of necklaces that are symmetric under both rotation and reversal. A k-ary bracelet is the lexicographically minimal string equivalent under these two operations. $B_k(n)$ represents the set of length $n$ bracelets, and $B_k(n)$ its cardinality. For a binary example ($k=2$), 001100 is a bracelet because its rotations (e.g., 011000) and reversals (e.g., 001100 reversed is 001100) are considered, and 001100 is the smallest among them.
+**Bracelets** are a variation of necklaces that are symmetric under both rotation and reversal. A k-ary bracelet is the lexicographically minimal string equivalent under these two operations. $B_k(n)$ represents the set of length $n$ bracelets, and $B_k(n)$ its cardinality. For a binary example ($k=2$), 001011 is a bracelet because its rotations (e.g., 010110) and reversals (e.g., 001011 reversed is 001101) are considered, and 001011 is the smallest among them.
 
 A critical property for restricted classes of these objects is **fixed density**. A k-ary string is said to be of fixed density if the number of occurrences of symbol 0 is fixed. Let us define density, denoted by $d$, as the number of non-zero symbols. Therefore, a string of length $n$ with density $d$ has $d$ non-zero symbols and $n-d$ zero symbols. The notation for sets of objects with fixed density adds the parameter $d$:
 *   $N_k(n, d)$: the set of k-ary necklaces having length $n$ and density $d$.
@@ -159,16 +143,16 @@ A critical property for restricted classes of these objects is **fixed density**
 Their cardinalities are denoted $N_k(n, d)$, $P_k(n, d)$, and $B_k(n, d)$, respectively.
 
 Counting the number of objects with specific symbol occurrences is possible using formulas. For necklaces with $n_i$ occurrences of symbol $i$, where $0 \le i < k$, the number $N_k(n_0, n_1, \ldots, n_{k-1})$ is given by:
-$$N_k(n_0, n_1, \ldots, n_{k-1}) = \frac{1}{n} \sum_{j|\gcd(n_0,n_1,\ldots,nk−1)} \varphi(j) \frac{(n/j)!}{(n_0/j)! \cdots (n_{k-1}/j)!}$$
+$$N_k(n_0, n_1, \ldots, n_{k-1}) = \frac{1}{n} \sum_{j|\gcd(n_0,n_1,\ldots,n_{k−1})} \varphi(j) \frac{(n/j)!}{(n_0/j)! \cdots (n_{k-1}/j)!}$$
 where $\varphi(j)$ is Euler's totient function. The number of necklaces with fixed density $d = n_1 + \cdots + n_{k-1}$ (and thus $n_0 = n-d$) is obtained by summing over all combinations of $n_1, \ldots, n_{k-1}$ that sum to $d$:
-$$N_k(n, d) = \sum_{n_1+\cdots+nk−1=d} N_k(n - d, n_1, \ldots, n_{k-1})$$
+$$N_k(n, d) = \sum_{n_1+\cdots+n_{k−1}=d} N_k(n - d, n_1, \ldots, n_{k-1})$$
 For binary strings ($k=2$), these formulas simplify. The cardinality of bracelets is related to that of necklaces; specifically, $N_k(n) \le 2B_k(n)$ and $N_k(n, d) \le 2B_k(n, d)$, as there are at most two necklaces in each equivalence class of a bracelet.
 
 ### Efficient Generation Algorithms: The CAT Goal
 
 The primary performance goal for listing combinatorial objects is achieving a CAT algorithm. This means the total computation time should be linear in the number of objects produced.
 
-Various schemes have been developed for generating combinatorial structures like necklaces, Lyndon words, and their variants. Recursive frameworks, such as the one by Cattell et al., are often used as a basis. Algorithms exist for generating necklaces with fixed density and content. Similarly, algorithms for generating bracelets exist, including a linear algorithm by Lisonek and a CAT algorithm by Sawada. However, prior to the work presented in one source, no significant work had been done to list restricted classes of bracelets like those with fixed density. The goal of the work described in one paper is to present an algorithm for lexicographic listing of bracelets with fixed density that works for arbitrary alphabet size and generates each successive bracelet in constant amortized time.
+Various schemes have been developed for generating combinatorial structures like necklaces, Lyndon words, and their variants. Recursive frameworks, such as the one by Cattell et al., are often used as a basis. Algorithms exist for generating necklaces with fixed density and content. Similarly, algorithms for generating bracelets exist, including a linear algorithm by Lisonek and a CAT algorithm by Sawada. (add more)
 
 ### Generating Fixed-Density Necklaces (A Foundation)
 
@@ -256,7 +240,7 @@ The described scheme has been implemented in C and is available from the authors
 
 In summary, the presented work provides a significant step in the field of combinatorial generation by offering a provably efficient method for listing fixed-density bracelets, objects important in various applications, thereby extending the capabilities of efficient combinatorial algorithms beyond unrestricted or fixed-content cases for this class of structures.
 
-
+### Finding Difference Covers
 
 A critical technique used is **backtracking**. This means that when the algorithm reaches a **dead end** – a partial solution that cannot possibly lead to a valid complete solution – it backs up, undoes the last choice, and tries a different one. The `step_forward` and `step_backward` functions are central to managing this process, updating and reverting the difference counts as the algorithm explores and backtracks through the search space.
 
@@ -294,9 +278,53 @@ Symmetry-breaking optimizations are included, particularly via the `CheckRev` fu
 
 The search is accelerated by using **parallel processing** through a **thread pool**. The work is divided by having different threads **start their searches from different initial values**. The `InitParallel` function initializes the thread pool and enqueues tasks for different starting values `j` within a calculated range (from `(N+1)/2` down to `(N-1)/D+1`). Each task runs an instance of the `DcGenerator` with a specific starting value and calls `Gen11` (or `BraceFD11` in `diff_cover3.cpp`) to begin the recursive generation process for that search partition. Multiple CPU cores work simultaneously on these different partitions of the search space, significantly reducing the total computation time. The main thread waits for these worker threads to complete, displaying a countdown of remaining tasks.
 
-The source also details the complexity analysis for a related problem, generating bracelets with fixed density. It discusses the goal of achieving **Constant Amortized Time (CAT)**, meaning the total time taken is proportional to the number of objects generated, so each successive object is listed in constant time on average. The paper proves that the optimized algorithm for bracelets with fixed density works in CAT. This is achieved by ensuring that the work done in each recursive call to `BraceFD` to append the next non-zero symbol is constant. While the `CheckRev` function involves comparisons, the paper argues that the total number of symbol comparisons performed by `CheckRev` across the entire generation process is proportional to the number of bracelets generated, thus maintaining the CAT complexity. This proof involves mapping comparisons to unique prenecklaces and showing the mapping is one-to-one, particularly for binary cases and then generalized for k-ary cases using a different mapping `g`. The core idea is that the number of "expensive" operations (like comparisons in `CheckRev`) is bounded by a constant times the number of objects found.
+Now we details the complexity analysis for a related problem, generating bracelets with fixed density. It discusses the goal of achieving **Constant Amortized Time (CAT)**, meaning the total time taken is proportional to the number of objects generated, so each successive object is listed in constant time on average. The paper proves that the optimized algorithm for bracelets with fixed density works in CAT. This is achieved by ensuring that the work done in each recursive call to `BraceFD` to append the next non-zero symbol is constant. While the `CheckRev` function involves comparisons, the paper argues that the total number of symbol comparisons performed by `CheckRev` across the entire generation process is proportional to the number of bracelets generated, thus maintaining the CAT complexity. This proof involves mapping comparisons to unique prenecklaces and showing the mapping is one-to-one, particularly for binary cases and then generalized for k-ary cases using a different mapping `g`. The core idea is that the number of "expensive" operations (like comparisons in `CheckRev`) is bounded by a constant times the number of objects found.
 
 This systematic approach is described as **guaranteed** to find solutions within the defined search space if they exist and if the search is exhaustive. It relies on **explicit pruning rules derived from mathematical properties**.
+
+Table 1: Output (112-150)
+
+| N   |  Cyclic quorum with optimal quorum size
+|-----|-------------------------------------------------------
+| 112 |  39  52  56  62  64  76  81  90  97 108 111 112
+| 113 |  47  49  61  68  76  79  87  90 103 107 112 113
+| 114 |  57  60  64  68  72  76  80  81  86 111 112 113 114
+| 115 |  58  61  65  69  73  77  81  82  87 112 113 114 115 
+| 116 |  58  61  64  68  72  76  80  84  89 113 114 115 116
+| 117 |  38  44  51  52  56  69  71  80  91 101 114 117
+| 118 |  58  61  63  64  69  75  90  95  99 108 115 117 118
+| 119 |  58  60  65  70  78  86  94 102 110 113 116 117 119
+| 120 |  55  56  66  68  75  82  90  97 114 115 118 119 120
+| 121 |  60  62  67  72  80  88  96 104 112 115 118 119 121
+| 122 |  55  61  62  69  72  79  91  95 107 111 116 120 122
+| 123 |  54  56  70  73  75  84  90  97 107 115 119 122 123
+| 124 |  54  59  71  75  79  86  93  99 112 121 122 123 124
+| 125 |  55  60  72  76  81  87  94 100 114 122 123 124 125
+| 126 |  50  52  56  62  65  82  87  92 103 110 111 125 126
+| 127 |  54  60  64  76  78  83  91 106 116 117 123 126 127
+| 128 |  53  57  63  66  68  78  92 100 101 108 109 127 128
+| 129 |  50  58  59  65  68  88  93  98 110 112 114 125 129
+| 130 |  47  51  59  61  72  85  90  91 100 107 124 127 130
+| 131 |  56  58  70  77  85  88  97 105 108 121 125 130 131
+| 132 |  66  69  72  76  80  84  88  92  96 101 129 130 131 132
+| 133 |  48  57  58  65  78  90  93 104 109 127 131 133
+| 134 |  67  69  73  76  82  92 102 112 122 126 129 130 133 134
+| 135 |  68  71  72  76  79  89  99 109 119 121 128 133 134 135
+| 136 |  68  71  73  77  80  90 100 110 120 121 128 134 135 136
+| 137 |  69  72  74  78  81  91 101 111 121 122 129 135 136 137
+| 138 |  65  69  76  83  93 103 113 123 126 129 132 134 135 138
+| 139 |  65  72  73  79  80  90 100 110 120 123 132 134 136 139
+| 140 |  62  67  79  83  87  91  98 105 111 128 137 138 139 140
+| 141 |  68  75  79  86  96 106 116 126 129 132 135 138 140 141
+| 142 |  63  66  80  82  84  92  95 104 107 134 135 140 141 142
+| 143 |  57  72  77  78  91  95  99 103 107 131 133 140 142 143
+| 144 |  56  66  67  69  76  84  98 106 114 118 120 139 141 144
+| 145 |  59  68  69  79  86  90  94  98 102 126 139 140 142 145
+| 146 |  59  66  71  79  80  90  93  99 103 128 129 144 145 146
+| 147 |  64  66  78  85  93  96 104 113 121 124 137 141 146 147
+| 148 |  56  61  62  80  88  95 106 110 112 126 135 138 147 148
+| 149 |  56  61  63  77  90 101 107 113 116 126 136 144 148 149
+| 150 |  51  63  66  69  70  96  98 106 111 119 128 130 144 150
 
 ### Approach 2: Reinforcement Learning (RL Implementation)
 
@@ -352,6 +380,32 @@ The `findDifferenceCoverRL` function orchestrates the parallel RL process. It in
 
 This reinforcement learning approach is described as **learned**, developing a strategy through experience. Unlike the systematic search, it is **not guaranteed** to find a solution, especially within a limited number of episodes (`MAX_EPISODES`). It learns to find *a* solution, not necessarily all of them. Its success relies on the AI **"discovering" good strategies based on the reward signals** it receives during training.
 
+Table 2: Output (151-170)
+
+| N   | Cyclic quorum with nearly optimal quorum size
+|-----|-------------------------------------------------------
+| 151 | 0   3   7  34  48  59  60  80  82 103 121 122 126 132 134 141 150
+| 152 | 0   4   7  10  61  62  69  80  81  99 102 116 118 125 128 130 141
+| 153 | 0   1   5   6  12  40  60  62  80  88  95  98 109 112 128 131 140
+| 154 | 0  16  21  27  31  40  48  62  73  77  98 116 125 127 128 141 147
+| 155 | 0   6  24  40  41  53  64  80  83 101 115 120 126 131 146 151 153
+| 156 | 0  10  22  39  72  81  88  90 102 105 109 116 141 143 146 147 148
+| 157 | 0   2  14  15  19  30  52  67 102 103 109 110 112 132 133 153 155
+| 158 | 0  12  16  23  29  33  34  37  60  69  79  84  99 110 112 117 138
+| 159 | 0  25  53  58  65  77  80  84  97  98 100 106 108 118 147 148 154
+| 160 | 0   2   9  10  22  41  64  65  75  79  90  93 106 109 114 115 123
+| 161 | 0  21  37  38  39  45  56  58  60  67  71  81 131 143 146 151 158
+| 162 | 0  13  14  15  16  40  50  53  55  59  63  67  78 139 144 146 155
+| 163 | 0  20  25  36  71  81  85  93 101 102 104 107 119 136 143 156 160
+| 164 | 0   9  29  56  67  68  82  86  88  89 114 119 129 130 137 154 160
+| 165 | 0   9  19  31  58  63  80  82 122 124 128 130 133 137 151 158 164
+| 166 | 0   3  11  19  31  59  66  73  76  83 116 133 139 143 144 146 148
+| 167 | 0  17  18  20  41  49  54  63  79  86  94  96  98 100 146 156 158
+| 168 | 0   2  15  39  42  60  70  76  77  81  86 106 117 127 129 135 149
+| 169 | 0  10  31  44  56  74  76  87  94  96  99 100 115 136 144 152 166
+| 170 | 0  22  36  43  45  46  51  70  91 103 107 111 120 131 138 141 164
+| 171 | 0   4  17  25  27  36  56  60  72 100 106 118 121 122 145 159 164
+
 ### Common Elements and Key Differences
 
 Both the recursive search and the reinforcement learning approaches share a fundamental strategy for efficiency: they **utilize parallel processing**. Both employ worker threads (or a thread pool) to significantly speed up their respective processes, whether that's exploring different starting points in a search space or running multiple learning agents simultaneously.
@@ -366,10 +420,6 @@ However, their core methodologies are distinctly different, as summarized in the
 | **Core Logic**    | Recursive function calls (`GenD`, `BraceFD`) | Neural Network (`PolicyNetwork`) |
 
 The recursive search systematically explores combinations using backtracking and predefined mathematical rules for pruning branches of the search tree that cannot lead to a solution. The RL approach, conversely, learns through interaction with the problem, adjusting a neural network's parameters based on trial and error guided by rewards.
-
-### Applications
-
-As mentioned earlier, the mathematical structures known as difference covers have practical applications. The sources specifically cite their use in areas like **coding theory, cryptography, and signal processing**. This underscores the relevance of developing efficient methods for finding these sets.
 
 ### Conclusion
 
