@@ -1,8 +1,13 @@
-# Finding Optimal Cyclic Quorum Systems by Exhaustive Search and Deep Reinforcement Learning
+# Finding Optimal Cyclic Quorum Systems by Combinatorical Search and Deep Reinforcement Learning
 
 ## Abstract
 
-Difference covers are a specific type of mathematical structure that can be used to generate cyclic quorum systems. The key idea is to use the differences between the elements of a difference cover to construct a cyclic quorum system. This approach allows for the construction of quorum systems with a wide range of properties, including equal work, equal responsibility, and other desirable characteristics.
+This paper explores two distinct computational approaches for finding optimal Cyclic Quorum Systems (CQS). CQS represent a structured method for constructing symmetric quorum systems, automatically achieving properties like equal work and equal responsibility, by generating the entire set of quorums cyclically from a single base quorum. The core challenge in designing optimal CQS lies in identifying this base quorum, a problem directly related to finding "difference covers" or relaxed difference sets.
+
+The first approach presented is a systematic combinatorical search algorithm. This method employs a generate-and-test methodology combined with intelligent pruning, backtracking through partial solutions, and symmetry-breaking optimizations inspired by algorithms for generating fixed-density necklaces or bracelets. This systematic approach is guaranteed to find solutions within its defined search space if they exist. The second approach leverages deep reinforcement learning (RL), treating the problem as a strategic game. Unlike the combinatorical method, the RL approach is not guaranteed to find a solution within a limited number of episodes.
+
+Both methodologies significantly enhance efficiency by utilizing parallel processing, employing multi-threading to divide the search space or run multiple learning agents simultaneously. The recursive search algorithm employs a divide-and-conquer strategy, dividing the search space into partitions and assigning each partition to a separate thread. The RL approach, on the other hand, employs a multi-agent system, with each agent learning independently but sharing the same neural network as an artificial "brain".
+
 
 ## 1. Introduction
 
