@@ -92,7 +92,7 @@ class NecklaceGenerator {
                     std::printf("b[t + 1] == 0\n");
                     std::exit(0);
                 }
-        
+
                 // for (int i = b[t + 1] + 1; i < 2; i++) {
                 //     b[t + 1] = i;
                 //     GenD(t + 1, t + 1);

@@ -47,20 +47,20 @@ classDiagram
         +forward(vector<float> input)
         +update(gradients)
     }
-    
+
     class WorkerThread{
         -PolicyNetwork policyNet
         -int N, D
         -atomic<int> episodeCounter
         -runEpisode()
     }
-    
+
     class Environment{
         -vector<int> chosen
         -vector<int> residues
         -step(action)
     }
-    
+
     PolicyNetwork <-- WorkerThread
     WorkerThread --> Environment
 ```
@@ -142,7 +142,7 @@ sequenceDiagram
     participant Worker1
     participant Worker2
     participant PolicyNet
-    
+
     Main->>Worker1: Start thread
     Main->>Worker2: Start thread
     Worker1->>PolicyNet: Forward pass
@@ -242,7 +242,7 @@ graph LR
 1. **Architecture Improvements**:
    - Recurrent layers for sequence awareness
    - Attention mechanisms for large N
-   
+
 2. **Algorithmic Improvements**:
    - Proximal Policy Optimization (PPO)
    - Entropy regularization
@@ -375,14 +375,14 @@ flowchart LR
     A[Shared Policy Network]:::neural --> B[Thread 1]:::thread1
     A --> C[Thread 2]:::thread2
     A --> D[Thread 3]:::thread3
-    
+
     B --> E[Episodes 1,4,7...]:::episode1
     C --> F[Episodes 2,5,8...]:::episode2
     D --> G[Episodes 3,6,9...]:::episode3
-    
+
     E & F & G --> H[Gradient Pool]:::gradient
     H --> A
-    
+
     H --> I{Solution?}:::decision
     I -->|Yes| J[Terminate All]:::success
     I -->|No| B

@@ -232,7 +232,7 @@ struct DiffCover {
                 this->ListAdd(j);
             this->num[j]++;
             this->RestoreRunLength();
-            
+
         }
         this->a[2] = this->k;
     }

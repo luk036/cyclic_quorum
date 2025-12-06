@@ -199,7 +199,7 @@ graph TD
         Agent(🤖 Policy Network)
         Action[Pick a Number]
         Reward[🏆<br>How many NEW differences were covered?]
-        
+
         State -- Input --> Agent;
         Agent -- Output --> Action;
         Action -- Update --> State;

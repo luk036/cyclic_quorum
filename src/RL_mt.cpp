@@ -28,7 +28,7 @@ The program uses a technique called "reinforcement learning," which is like teac
 
 At the heart of the program is an artificial "brain" called a PolicyNetwork. This brain has three layers of artificial neurons that process information. Think of it like a decision-making system with multiple stages:
 - The first layer receives information about the current state of the puzzle
-- The middle layers process this information 
+- The middle layers process this information
 - The final layer decides which number to pick next
 
 The brain starts with random decision-making abilities, but it learns and improves over time by remembering what worked well and what didn't.
@@ -108,7 +108,7 @@ public:
     // Initialize weights using Xavier initialization for better training
     void InitializeWeights() {
         // Xavier initialization helps maintain variance of activations across layers
-        auto xavier = [](int in, int out) { 
+        auto xavier = [](int in, int out) {
             return std::sqrt(6.0f / (in + out)) * (2.0f * rand() / RAND_MAX - 1.0f);
         };
 
@@ -181,7 +181,7 @@ public:
                const std::vector<std::vector<float>>& gradW3,
                const std::vector<float>& gradB3) {
         std::lock_guard<std::mutex> lock(networkMutex);  // Thread-safe update
-        
+
         // Update first layer weights and biases
         for (int i = 0; i < HIDDEN_SIZE1; ++i) {
             for (int j = 0; j < inputSize; ++j) {
@@ -222,11 +222,11 @@ std::vector<float> softmax(const std::vector<float>& logits) {
 }
 
 // Worker thread function for parallel training
-void workerThread(PolicyNetwork& policyNet, int N, int D, 
+void workerThread(PolicyNetwork& policyNet, int N, int D,
                  std::atomic<int>& episodeCounter, std::atomic<bool>& solutionFound,
                  std::mutex& outputMutex) {
     std::mt19937 gen(std::random_device{}());  // Random number generator
-    
+
     // Main training loop for each thread
     while (!solutionFound && episodeCounter < MAX_EPISODES) {
         int episode = episodeCounter++;
@@ -254,7 +254,7 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
 
             // Get action probabilities from policy network
             std::vector<float> logits = policyNet.forward(state);
-            
+
             // Mask already chosen elements by setting their logits to very low value
             for (int i = 0; i < N; ++i) {
                 if (chosen[i]) logits[i] = -1e9;
@@ -340,7 +340,7 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
         for (size_t t = 0; t < states.size(); ++t) {
             std::vector<float> logits = policyNet.forward(states[t]);
             std::vector<float> probs = softmax(logits);
-            
+
             std::vector<float> gradLogits(N, 0.0f);
             for (int i = 0; i < N; ++i) {
                 float indicator = (i == actions[t]) ? 1.0f : 0.0f;
@@ -357,7 +357,7 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
 void findDifferenceCoverRL(int N, int D) {
     const int inputSize = 2 * N;  // Input size is twice N (chosen + residues)
     PolicyNetwork policyNet(inputSize, N);  // Initialize policy network
-    
+
     // Shared variables for multi-threading
     std::atomic<int> episodeCounter(0);  // Tracks total episodes across threads
     std::atomic<bool> solutionFound(false);  // Flag when solution is found
@@ -366,7 +366,7 @@ void findDifferenceCoverRL(int N, int D) {
     // Create and launch worker threads
     std::vector<std::thread> threads;
     for (int i = 0; i < NUM_THREADS; ++i) {
-        threads.emplace_back(workerThread, std::ref(policyNet), N, D, 
+        threads.emplace_back(workerThread, std::ref(policyNet), N, D,
                            std::ref(episodeCounter), std::ref(solutionFound),
                            std::ref(outputMutex));
     }

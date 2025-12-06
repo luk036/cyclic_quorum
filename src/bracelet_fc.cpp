@@ -13,11 +13,11 @@ struct Element {
 
 class NecklaceGenerator {
 public:
-    NecklaceGenerator(int n, int num2) : 
+    NecklaceGenerator(int n, int num2) :
         n(n), total(0), head(2), nb(0) {
         num[1] = n - num2;
         num[2] = num2;
-        
+
         // Initialize linked list
         for (int j = 3; j >= 0; j--) {
             avail[j] = {j - 1, j + 1};
@@ -94,8 +94,8 @@ private:
 
     int checkRev() const {
         int j = 1;
-        while (j <= nb / 2 && 
-               B[j].v == B[nb - j + 1].v && 
+        while (j <= nb / 2 &&
+               B[j].v == B[nb - j + 1].v &&
                B[j].s == B[nb - j + 1].s) {
             j++;
         }
@@ -141,7 +141,7 @@ private:
 
                 const int z2 = (j != 2) ? t + 1 : z;
                 const int p2 = (j != a[t - p]) ? t : p;
-                
+
                 const int c = checkRev();
                 if (c == 0) {
                     std::cout << t << "," << j << " <------\n";
@@ -193,7 +193,7 @@ private:
 
                 const int z2 = (j != 2) ? t + 1 : z;
                 const int p2 = (j != a[t - p]) ? t : p;
-                
+
                 const int c = checkRev();
                 if (c == 0) {
                     gen1(t + 1, p2, t, z2, nb, false);

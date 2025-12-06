@@ -110,7 +110,7 @@ flowchart TD
 
 ### 3.1 Key Optimization Techniques
 
-1. **Symmetry Breaking**: 
+1. **Symmetry Breaking**:
    - Avoids duplicate solutions through canonical ordering
    - Implemented via `b` array tracking positions
 
@@ -205,7 +205,7 @@ flowchart LR
 void InitParallel(int N, int D) {
     const unsigned num_workers = std::thread::hardware_concurrency();
     ThreadPool pool(num_workers);
-    
+
     std::vector<std::future<void>> results;
     const int start = (N + 1) / 2;
     const int end = (N - 1) / D + 1;
@@ -216,7 +216,7 @@ void InitParallel(int N, int D) {
             generator.Gen11();
         }));
     }
-    
+
     int countdown = start - end;
     for (auto &result : results) {
         printf("%3d\r", countdown--);
@@ -410,7 +410,7 @@ class DcGenerator:
         GenD(2, ...)
 
     method GenD(t, p, count):
-        if t ≥ D-1: 
+        if t ≥ D-1:
             PrintD(p, count)
             return
         step_forward(t, count)

@@ -47,7 +47,7 @@ The algorithm maintains these invariants:
 1. **Initialization**:
    $$ a[0] = 0 $$
    $$ a[D] = N $$
-   
+
 2. **Difference Coverage**:
    $$ \forall x \in [0,N-1], \exists i,j \text{ s.t. } x \equiv (a_i - a_j) \mod N $$
 
@@ -149,7 +149,7 @@ The algorithm uses these bounds to limit the search space:
 
 1. Upper bound:
    $$ a_{t+1} \leq \text{ND} + t + 1 $$
-   
+
 2. Lower bound:
    $$ a_{t+1} \geq a_t + 1 $$
 
@@ -192,7 +192,7 @@ void PrintD(int p, int count) {
     const int Dp = D % p;
     const int next = (D / p) * a[p] + a[Dp];
     if (next < N) return; // Invalid solution
-    
+
     step_forward(D1, count);
     if (count >= N2) {
         // Print valid solution
@@ -250,7 +250,7 @@ procedure BraceFD(t, p, r1, count):
     if t ≥ D-1 then
         PrintSolution()
         return
-    
+
     step_forward(t, count)
     if count ≥ threshold then
         for j from upper_bound downto lower_bound do

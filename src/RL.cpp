@@ -37,17 +37,17 @@ The program continues this learning process for up to 500,000 episodes, constant
 
 /**
  * @brief Implements a Reinforcement Learning approach to finding a Difference Cover
- * 
+ *
  * This function uses a Policy Network and REINFORCE algorithm to search for a difference cover
  * for a given set size N and difference cover size D. The algorithm learns to select positions
  * that maximize the number of unique residues covered.
- * 
+ *
  * @param N The size of the set to find a difference cover for
  * @param D The size of the difference cover
- * 
- * @note The algorithm fixes the first position and attempts to find a solution 
+ *
+ * @note The algorithm fixes the first position and attempts to find a solution
  * through reinforcement learning over multiple training episodes
- * 
+ *
  * @throws None
  * @returns void (prints solution to console or indicates no solution found)
  */
@@ -91,7 +91,7 @@ public:
     // Initialize weights using Xavier initialization for better training
     void InitializeWeights() {
         // Xavier initialization helps maintain variance of activations across layers
-        auto xavier = [](int in, int out) { 
+        auto xavier = [](int in, int out) {
             return std::sqrt(6.0f / (in + out)) * (2.0f * rand() / RAND_MAX - 1.0f);
         };
 
@@ -234,7 +234,7 @@ void findDifferenceCoverRL(int N, int D) {
 
             // Forward pass through network to get logits
             std::vector<float> logits = policyNet.forward(state);
-            
+
             // Mask already chosen positions (set their logits to very low value)
             for (int i = 0; i < N; ++i) {
                 if (chosen[i]) logits[i] = -1e9;
@@ -316,7 +316,7 @@ void findDifferenceCoverRL(int N, int D) {
             // Forward pass to get current probabilities
             std::vector<float> logits = policyNet.forward(states[t]);
             std::vector<float> probs = softmax(logits);
-            
+
             // Compute policy gradient (REINFORCE algorithm)
             std::vector<float> gradLogits(N, 0.0f);
             for (int i = 0; i < N; ++i) {

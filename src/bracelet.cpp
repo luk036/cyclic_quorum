@@ -188,7 +188,7 @@ public:
     }
 
     void GenBF21121F() {
-        int order[20]; // used for lex generation        
+        int order[20]; // used for lex generation
         int k = head;
         // generate in lex order
         int i = 0;
@@ -196,12 +196,12 @@ public:
             order[++i] = k;
             k = avail[k].next;
         }
-        
+
         for (int count = i; count >= 1; count--) {
             int j = order[count];
-            bool RS = false;    
+            bool RS = false;
             int z2, p2, c;
-    
+
             run[2] = 0;
             UpdateRunLength(j);
             num[j]--;

@@ -111,13 +111,13 @@ Luk and Wong proposed using cyclic difference sets as a basis for constructing q
 
 ## Finding Difference Covers: Exhaustive Search vs. Deep Reinforcement Learning
 
-In this section, we delve into the difference cover problem, a combinatorial problem that has been studied extensively in the field of mathematics and computer science. The problem is to find a subset of a given set of numbers that, when paired with the original set, covers all possible differences between the numbers. 
+In this section, we delve into the difference cover problem, a combinatorial problem that has been studied extensively in the field of mathematics and computer science. The problem is to find a subset of a given set of numbers that, when paired with the original set, covers all possible differences between the numbers.
 
 ### The Difference Cover Problem Defined
 
 At its core, the difference cover problem is a puzzle about finding a specific subset of numbers. Given a total range of numbers from 0 to $N$-1 and a required set size $d$, the task is to select $d$ numbers such that the positive differences between every unique pair of selected numbers modulo $N$ include all possible values from 1 to $N$-1 at least once. The problem can be visualized as placing $d$ markers on a circle with $N$ points (representing 0 to $N$-1) such that the distances between pairs of markers cover all possible distances around the circle.
 
-For convenience of discussion, we assume that both $N$ and $d$ are at least 3. Additionally, $N$ cannot exceed the value $d$($d$-1)+1. 
+For convenience of discussion, we assume that both $N$ and $d$ are at least 3. Additionally, $N$ cannot exceed the value $d$($d$-1)+1.
 
 ### Approach 1: Recursive Search
 
@@ -294,7 +294,7 @@ Table 1: Output (112-150)
 | 112 |  39  52  56  62  64  76  81  90  97 108 111 112
 | 113 |  47  49  61  68  76  79  87  90 103 107 112 113
 | 114 |  57  60  64  68  72  76  80  81  86 111 112 113 114
-| 115 |  58  61  65  69  73  77  81  82  87 112 113 114 115 
+| 115 |  58  61  65  69  73  77  81  82  87 112 113 114 115
 | 116 |  58  61  64  68  72  76  80  84  89 113 114 115 116
 | 117 |  38  44  51  52  56  69  71  80  91 101 114 117
 | 118 |  58  61  63  64  69  75  90  95  99 108 115 117 118
@@ -447,8 +447,8 @@ The problem of finding difference covers is a combinatorial challenge with pract
  M. Maekawa, ‘‘A $\sqrt{N}$ algorithm for mutual exclusion in decentralized systems,’’ ACM Trans. Comput. Syst. (TOCS), vol. 3, no. 2, pp. 145–159, 1985.
 
  C. J. Kleinheksel and A. K. Somani, ‘‘Efficient distributed all-pairs algorithms: Management using optimal cyclic quorums,’’ IEEE Trans. Parallel Distrib. Syst., vol. 29, no. 2, pp. 391–404, Feb. 2018.
- 
- Shouwen Lai, Bo Zhang, Binoy Ravindran, and Hyeonjoong Cho, "CQS-Pair: 
+
+ Shouwen Lai, Bo Zhang, Binoy Ravindran, and Hyeonjoong Cho, "CQS-Pair:
  Cyclic Quorum System Pair for Wakeup Scheduling in Wireless Sensor Networks", Systems Software Research Group.
- 
+
  Cory J. Kleinheksel and Arun K. Somani, "Scaling Distributed All-Pairs Algorithms: Manage Computation and Limit Data Replication with Quorums".
