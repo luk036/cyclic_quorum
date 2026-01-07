@@ -99,7 +99,7 @@ struct DiffCover {
           n1{num_elem / 2 - density * (density - 1) / 2},
           n2{num_elem / 2},  // begin_a{&a[0]},
           size_n{(num_elem / 2 + 1) * sizeof(int8_t)} {
-        for (auto j = 0; j <= density; j++) a[j] = 0;
+        for (auto idx = 0; idx <= density; idx++) a[idx] = 0;
 
         a[density] = num_elem;
         a[0] = 0;  // for convenience
@@ -112,8 +112,8 @@ struct DiffCover {
     void PrintD() const {
         // print a
         printf("\n");
-        for (auto i = 1; i <= this->density; i++) {
-            printf("%d ", this->a[i]);
+        for (auto idx = 1; idx <= this->density; idx++) {
+            printf("%d ", this->a[idx]);
         }
         printf("\n");
         fflush(stdout);
@@ -189,9 +189,9 @@ struct DiffCover {
 
         const auto at = this->a[t];
         for (auto ptr = &this->a[0]; ptr != &this->a[0] + t; ++ptr) {
-            const auto p_diff = at - *ptr;
-            const auto n_diff = this->num_elem - p_diff;
-            differences[p_diff <= n_diff ? p_diff : n_diff] = 1;
+            const auto pos_diff = at - *ptr;
+            const auto neg_diff = this->num_elem - pos_diff;
+            differences[pos_diff <= neg_diff ? pos_diff : neg_diff] = 1;
         }
         if (t >= this->threshold) {
             int8_t count = 0;
@@ -222,8 +222,8 @@ struct DiffCover {
                 }
                 tail = max - 1;
             }
-            for (auto j = tail; j >= at + 1; j--) {
-                this->a[t1] = j;
+            for (auto idx = tail; idx >= at + 1; idx--) {
+                this->a[t1] = idx;
                 this->b[t1] = 1;
                 this->GenD(t1, t1, differences);
             }
@@ -314,10 +314,10 @@ int main(int argc, char **argv) {
     auto end = (num_elem - 1) / density + 1;
 
     // for (auto j = num_elem - density + 1; j >= end; j--) {
-    for (auto j = start; j >= end; j--) {
-        results.emplace_back(pool.enqueue([&num_elem, &density, &threshold, j]() {
+    for (auto idx = start; idx >= end; idx--) {
+        results.emplace_back(pool.enqueue([&num_elem, &density, &threshold, idx]() {
             DiffCover dc(num_elem, density, threshold);
-            dc.a[1] = j;
+            dc.a[1] = idx;
             dc.b[1] = 1;
             int8_t differences[MAX_N];
             memset(differences, 0, dc.size_n);

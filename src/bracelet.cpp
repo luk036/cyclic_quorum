@@ -45,14 +45,14 @@ public:
         num_map[2] = 2;
 
         a[0] = a[1] = 0;
-        for (int j = 3; j >= 0; j--) {
-            avail[j].next = j - 1;
-            avail[j].prev = j + 1;
+        for (int idx = 3; idx >= 0; idx--) {
+            avail[idx].next = idx - 1;
+            avail[idx].prev = idx + 1;
         }
         head = 2;
-        for (int j = 1; j <= N; j++) {
-            a[j] = 2;
-            run[j] = 0;
+        for (int idx = 1; idx <= N; idx++) {
+            a[idx] = 2;
+            run[idx] = 0;
         }
         a[1] = 1;
         num[1]--;
@@ -64,8 +64,8 @@ public:
 
     void Print() {
         total++;
-        for (int j = 1; j <= N; j++) {
-            printf("%d ", num_map[a[j]] - 1);
+        for (int idx = 1; idx <= N; idx++) {
+            printf("%d ", num_map[a[idx]] - 1);
         }
         printf("\n");
     }
@@ -152,13 +152,13 @@ public:
             j = head;
 
             // generate in lex order
-            i = 0;
+            int idx = 0;
             while (j >= a[t - p]) {
-                order[++i] = j;
+                order[++idx] = j;
                 j = avail[j].next;
             }
 
-            for (count = i; count >= 1; count--) {
+            for (count = idx; count >= 1; count--) {
                 j = order[count];
 
                 run[z] = t - z;
@@ -191,13 +191,13 @@ public:
         int order[20]; // used for lex generation
         int k = head;
         // generate in lex order
-        int i = 0;
+        int idx = 0;
         while (k >= a[1]) {
-            order[++i] = k;
+            order[++idx] = k;
             k = avail[k].next;
         }
 
-        for (int count = i; count >= 1; count--) {
+        for (int count = idx; count >= 1; count--) {
             int j = order[count];
             bool RS = false;
             int z2, p2, c;

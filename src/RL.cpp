@@ -98,27 +98,27 @@ public:
         // Layer 1 initialization
         W1.resize(HIDDEN_SIZE1, std::vector<float>(inputSize));
         b1.resize(HIDDEN_SIZE1, 0.0f);
-        for (int i = 0; i < HIDDEN_SIZE1; ++i) {
-            for (int j = 0; j < inputSize; ++j) {
-                W1[i][j] = xavier(inputSize, HIDDEN_SIZE1);
+        for (int idx = 0; idx < HIDDEN_SIZE1; ++idx) {
+            for (int jdx = 0; jdx < inputSize; ++jdx) {
+                W1[idx][jdx] = xavier(inputSize, HIDDEN_SIZE1);
             }
         }
 
         // Layer 2 initialization
         W2.resize(HIDDEN_SIZE2, std::vector<float>(HIDDEN_SIZE1));
         b2.resize(HIDDEN_SIZE2, 0.0f);
-        for (int i = 0; i < HIDDEN_SIZE2; ++i) {
-            for (int j = 0; j < HIDDEN_SIZE1; ++j) {
-                W2[i][j] = xavier(HIDDEN_SIZE1, HIDDEN_SIZE2);
+        for (int idx = 0; idx < HIDDEN_SIZE2; ++idx) {
+            for (int jdx = 0; jdx < HIDDEN_SIZE1; ++jdx) {
+                W2[idx][jdx] = xavier(HIDDEN_SIZE1, HIDDEN_SIZE2);
             }
         }
 
         // Output layer initialization
         W3.resize(outputSize, std::vector<float>(HIDDEN_SIZE2));
         b3.resize(outputSize, 0.0f);
-        for (int i = 0; i < outputSize; ++i) {
-            for (int j = 0; j < HIDDEN_SIZE2; ++j) {
-                W3[i][j] = xavier(HIDDEN_SIZE2, outputSize);
+        for (int idx = 0; idx < outputSize; ++idx) {
+            for (int jdx = 0; jdx < HIDDEN_SIZE2; ++jdx) {
+                W3[idx][jdx] = xavier(HIDDEN_SIZE2, outputSize);
             }
         }
     }
@@ -127,33 +127,33 @@ public:
     std::vector<float> forward(const std::vector<float>& input) {
         // Layer 1: z1 = W1 * input + b1
         std::vector<float> z1(HIDDEN_SIZE1, 0.0f);
-        for (int i = 0; i < HIDDEN_SIZE1; ++i) {
-            for (int j = 0; j < inputSize; ++j) {
-                z1[i] += W1[i][j] * input[j];
+        for (int idx = 0; idx < HIDDEN_SIZE1; ++idx) {
+            for (int jdx = 0; jdx < inputSize; ++jdx) {
+                z1[idx] += W1[idx][jdx] * input[jdx];
             }
-            z1[i] += b1[i];
+            z1[idx] += b1[idx];
             // ReLU activation (returns max(0, x))
-            z1[i] = std::max(0.0f, z1[i]);
+            z1[idx] = std::max(0.0f, z1[idx]);
         }
 
         // Layer 2: z2 = W2 * z1 + b2
         std::vector<float> z2(HIDDEN_SIZE2, 0.0f);
-        for (int i = 0; i < HIDDEN_SIZE2; ++i) {
-            for (int j = 0; j < HIDDEN_SIZE1; ++j) {
-                z2[i] += W2[i][j] * z1[j];
+        for (int idx = 0; idx < HIDDEN_SIZE2; ++idx) {
+            for (int jdx = 0; jdx < HIDDEN_SIZE1; ++jdx) {
+                z2[idx] += W2[idx][jdx] * z1[jdx];
             }
-            z2[i] += b2[i];
+            z2[idx] += b2[idx];
             // ReLU activation
-            z2[i] = std::max(0.0f, z2[i]);
+            z2[idx] = std::max(0.0f, z2[idx]);
         }
 
         // Output layer: z3 = W3 * z2 + b3 (produces logits)
         std::vector<float> z3(outputSize, 0.0f);
-        for (int i = 0; i < outputSize; ++i) {
-            for (int j = 0; j < HIDDEN_SIZE2; ++j) {
-                z3[i] += W3[i][j] * z2[j];
+        for (int idx = 0; idx < outputSize; ++idx) {
+            for (int jdx = 0; jdx < HIDDEN_SIZE2; ++jdx) {
+                z3[idx] += W3[idx][jdx] * z2[jdx];
             }
-            z3[i] += b3[i];
+            z3[idx] += b3[idx];
         }
         return z3;
     }
@@ -194,12 +194,12 @@ std::vector<float> softmax(const std::vector<float>& logits) {
     std::vector<float> probs(logits.size());
     float maxLogit = *std::max_element(logits.begin(), logits.end());  // For numerical stability
     float sumExp = 0.0f;
-    for (size_t i = 0; i < logits.size(); ++i) {
-        probs[i] = std::exp(logits[i] - maxLogit);
-        sumExp += probs[i];
+    for (size_t idx = 0; idx < logits.size(); ++idx) {
+        probs[idx] = std::exp(logits[idx] - maxLogit);
+        sumExp += probs[idx];
     }
-    for (size_t i = 0; i < probs.size(); ++i) {
-        probs[i] /= sumExp;  // Normalize to get probabilities
+    for (size_t idx = 0; idx < probs.size(); ++idx) {
+        probs[idx] /= sumExp;  // Normalize to get probabilities
     }
     return probs;
 }
@@ -227,17 +227,17 @@ void findDifferenceCoverRL(int N, int D) {
         for (int step = 0; step < D - 1; ++step) {
             // Build state: concatenation of chosen positions and covered residues
             std::vector<float> state(inputSize, 0.0f);
-            for (int i = 0; i < N; ++i) {
-                state[i] = static_cast<float>(chosen[i]);
-                state[N + i] = static_cast<float>(residues[i]);
+            for (int idx = 0; idx < N; ++idx) {
+                state[idx] = static_cast<float>(chosen[idx]);
+                state[N + idx] = static_cast<float>(residues[idx]);
             }
 
             // Forward pass through network to get logits
             std::vector<float> logits = policyNet.forward(state);
 
             // Mask already chosen positions (set their logits to very low value)
-            for (int i = 0; i < N; ++i) {
-                if (chosen[i]) logits[i] = -1e9;
+            for (int idx = 0; idx < N; ++idx) {
+                if (chosen[idx]) logits[idx] = -1e9;
             }
 
             // Convert logits to probabilities and sample an action
@@ -248,10 +248,10 @@ void findDifferenceCoverRL(int N, int D) {
             // Update chosen positions and calculate new covered residues
             chosen[action] = 1;
             int newCovered = 0;
-            for (int j = 0; j < N; ++j) {
-                if (chosen[j] && j != action) {
-                    int res1 = (action - j + N) % N;  // Calculate residues
-                    int res2 = (j - action + N) % N;
+            for (int jdx = 0; jdx < N; ++jdx) {
+                if (chosen[jdx] && jdx != action) {
+                    int res1 = (action - jdx + N) % N;  // Calculate residues
+                    int res2 = (jdx - action + N) % N;
                     if (!residues[res1]) {
                         residues[res1] = 1;
                         newCovered++;
@@ -271,16 +271,16 @@ void findDifferenceCoverRL(int N, int D) {
 
         // Check if current solution covers all residues
         bool isSolution = true;
-        for (int r : residues) {
-            if (!r) {
+        for (int res : residues) {
+            if (!res) {
                 isSolution = false;
                 break;
             }
         }
         if (isSolution) {
             printf("\nSolution found in episode %d:\n", episode);
-            for (int i = 0; i < N; ++i) {
-                if (chosen[i]) printf("%d ", i);
+            for (int idx = 0; idx < N; ++idx) {
+                if (chosen[idx]) printf("%d ", idx);
             }
             printf("\n");
             return;
@@ -289,19 +289,19 @@ void findDifferenceCoverRL(int N, int D) {
         // Compute discounted returns (backwards)
         std::vector<float> returns(rewards.size());
         float G = 0.0;
-        for (int t = rewards.size() - 1; t >= 0; --t) {
-            G = GAMMA * G + rewards[t];  // Discounted return
-            returns[t] = G;
+        for (int time_idx = rewards.size() - 1; time_idx >= 0; --time_idx) {
+            G = GAMMA * G + rewards[time_idx];  // Discounted return
+            returns[time_idx] = G;
         }
 
         // Normalize returns to reduce variance
         float mean = 0.0f, stddev = 0.0f;
-        for (float R : returns) mean += R;
+        for (float ret : returns) mean += ret;
         mean /= returns.size();
-        for (float R : returns) stddev += (R - mean) * (R - mean);
+        for (float ret : returns) stddev += (ret - mean) * (ret - mean);
         stddev = std::sqrt(stddev / returns.size());
         if (stddev < 1e-5) stddev = 1.0f;  // Prevent division by zero
-        for (float& R : returns) R = (R - mean) / stddev;
+        for (float& ret : returns) ret = (ret - mean) / stddev;
 
         // Initialize gradient accumulators
         std::vector<std::vector<float>> gradW1(HIDDEN_SIZE1, std::vector<float>(inputSize, 0.0f));
@@ -312,16 +312,16 @@ void findDifferenceCoverRL(int N, int D) {
         std::vector<float> gradB3(outputSize, 0.0f);
 
         // Compute gradients for each step in the episode
-        for (size_t t = 0; t < states.size(); ++t) {
+        for (size_t time_idx = 0; time_idx < states.size(); ++time_idx) {
             // Forward pass to get current probabilities
-            std::vector<float> logits = policyNet.forward(states[t]);
+            std::vector<float> logits = policyNet.forward(states[time_idx]);
             std::vector<float> probs = softmax(logits);
 
             // Compute policy gradient (REINFORCE algorithm)
             std::vector<float> gradLogits(N, 0.0f);
-            for (int i = 0; i < N; ++i) {
-                float indicator = (i == actions[t]) ? 1.0f : 0.0f;
-                gradLogits[i] = returns[t] * (indicator - probs[i]);  // Policy gradient theorem
+            for (int idx = 0; idx < N; ++idx) {
+                float indicator = (idx == actions[time_idx]) ? 1.0f : 0.0f;
+                gradLogits[idx] = returns[time_idx] * (indicator - probs[idx]);  // Policy gradient theorem
             }
 
             // Backpropagation would be implemented here in a complete implementation

@@ -59,8 +59,8 @@ class DcGenerator {
 
     inline void step_forward(int t, int &count) {
         const int at = a[t];
-        for (int j = 0; j < t; ++j) {
-            const int aj = a[j];
+        for (int idx = 0; idx < t; ++idx) {
+            const int aj = a[idx];
             const int p_diff = at - aj;
             const int n_diff = N - p_diff;
             const int diff = p_diff < n_diff ? p_diff : n_diff;
@@ -74,8 +74,8 @@ class DcGenerator {
 
     inline void step_backward(int t) {
         const int at = a[t];
-        for (int j = 0; j < t; ++j) {
-            const int aj = a[j];
+        for (int idx = 0; idx < t; ++idx) {
+            const int aj = a[idx];
             const int p_diff = at - aj;
             const int n_diff = N - p_diff;
             const int diff = p_diff < n_diff ? p_diff : n_diff;
@@ -103,8 +103,8 @@ class DcGenerator {
         step_forward(D1, count);
         if (count >= N2) {
             printf("\n");
-            for (int i = 1; i <= D; ++i) {
-                printf("%3d ", a[i]);
+            for (int idx = 1; idx <= D; ++idx) {
+                printf("%3d ", a[idx]);
             }
             printf("\n");
             fflush(stdout);
@@ -132,8 +132,8 @@ class DcGenerator {
                 tail = max - 1;
             }
 
-            for (int j = tail; j >= a[t] + 1; --j) {
-                a[t_1] = j;
+            for (int idx = tail; idx >= a[t] + 1; --idx) {
+                a[t_1] = idx;
                 // b[t_1] = 1;
                 GenD(t_1, t_1, count);
             }
@@ -154,8 +154,8 @@ class DcGenerator {
             tail = max - 1;
         }
 
-        for (int j = tail; j >= a[1] + 1; --j) {
-            a[2] = j;
+        for (int idx = tail; idx >= a[1] + 1; --idx) {
+            a[2] = idx;
             // b[2] = 1;
             GenD(2, 2, count);
         }
@@ -176,9 +176,9 @@ void InitParallel(int N, int D) {
     const int start = (N + 1) / 2;
     const int end = (N - 1) / D + 1;
 
-    for (int j = start; j >= end; --j) {
-        results.emplace_back(pool.enqueue([N, D, j]() {
-            DcGenerator generator(N, D, j);
+    for (int idx = start; idx >= end; --idx) {
+        results.emplace_back(pool.enqueue([N, D, idx]() {
+            DcGenerator generator(N, D, idx);
             generator.Gen11();
         }));
     }

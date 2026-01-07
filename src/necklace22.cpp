@@ -63,8 +63,8 @@ class NecklaceGenerator {
             if ((N % a[p] == 0) && (a[p] != N)) {
                 // Do nothing special for Lyndon words case
             } else {
-                for (int j = 1; j <= end; j++) {
-                    if (a[i] == j) {
+                for (int idx = 1; idx <= end; idx++) {
+                    if (a[i] == idx) {
                         std::printf("%d ", b[i]);
                         i++;
                     } else {
@@ -99,8 +99,8 @@ class NecklaceGenerator {
                 // }
                 tail = max - 1;
             }
-            for (int j = tail; j >= a[t] + 1; j--) {
-                a[t + 1] = j;
+            for (int idx = tail; idx >= a[t] + 1; idx--) {
+                a[t + 1] = idx;
                 b[t + 1] = 1;
                 GenD(t + 1, t + 1);
             }
@@ -121,16 +121,16 @@ class NecklaceGenerator {
             GenD(2, 1);
             tail = max - 1;
         }
-        for (int j = tail; j >= a[1] + 1; j--) {
-            a[2] = j;
+        for (int idx = tail; idx >= a[1] + 1; idx--) {
+            a[2] = idx;
             b[2] = 1;
             GenD(2, 2);
         }
     }
 
     void Init() {
-        for (int j = N - D + 1; j >= (N - 1) / D + 1; j--) {
-            a[1] = j;
+        for (int idx = N - D + 1; idx >= (N - 1) / D + 1; idx--) {
+            a[1] = idx;
             b[1] = 1;
             Gen11();
         }

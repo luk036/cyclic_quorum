@@ -19,8 +19,8 @@ public:
         num[2] = num2;
 
         // Initialize linked list
-        for (int j = 3; j >= 0; j--) {
-            avail[j] = {j - 1, j + 1};
+        for (int idx = 3; idx >= 0; idx--) {
+            avail[idx] = {idx - 1, idx + 1};
         }
 
         // Initialize arrays
@@ -70,7 +70,7 @@ private:
 
     void print(int p) const {
         if (n % p != 0) return;
-        // for (int j = 1; j <= n; j++) std::cout << a[j] - 1 << " ";
+        // for (int idx = 1; idx <= n; idx++) std::cout << a[idx] - 1 << " ";
         // std::cout << "\n";
         const_cast<NecklaceGenerator*>(this)->total++;
     }

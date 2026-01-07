@@ -50,14 +50,14 @@ struct DiffCover {
     DiffCover(int n, int d, int threshold) : n{n}, threshold{threshold} {
         this->num[1] = this->n - d;
         this->num[2] = d;
-        for (int j = this->k + 1; j >= 0; j--) {
-            this->avail[j].next = j - 1;
-            this->avail[j].prev = j + 1;
+        for (int idx = this->k + 1; idx >= 0; idx--) {
+            this->avail[idx].next = idx - 1;
+            this->avail[idx].prev = idx + 1;
         }
         this->head = this->k;
-        for (int j = 1; j <= this->n; j++) {
-            this->a[j] = this->k;
-            this->run[j] = 0;
+        for (int idx = 1; idx <= this->n; idx++) {
+            this->a[idx] = this->k;
+            this->run[idx] = 0;
         }
         this->total = 0;
         this->a[1] = 1;
@@ -93,11 +93,11 @@ struct DiffCover {
 
     /*-----------------------------------------------------------*/
     void Print(int p) {
-        int j;
+        int idx;
         if (this->n != p)
             return;
-        for (j = 1; j <= this->n; j++)
-            printf("%d ", this->a[j] - 1);
+        for (idx = 1; idx <= this->n; idx++)
+            printf("%d ", this->a[idx] - 1);
         printf("\n");
         this->total++;
     }
@@ -121,22 +121,22 @@ struct DiffCover {
     // return-1 if reverse smaller, 0 if equal, and 1 if reverse is larger
     /*---------------------------------------------------------------------*/
     int CheckRev() {
-        int j;
-        j = 1;
-        while (this->B[j].v == this->B[this->nb - j + 1].v &&
-               this->B[j].s == this->B[this->nb - j + 1].s && j <= this->nb / 2)
-            j++;
-        if (j > this->nb / 2)
+        int idx;
+        idx = 1;
+        while (this->B[idx].v == this->B[this->nb - idx + 1].v &&
+               this->B[idx].s == this->B[this->nb - idx + 1].s && idx <= this->nb / 2)
+            idx++;
+        if (idx > this->nb / 2)
             return 0;
-        if (this->B[j].s < this->B[this->nb - j + 1].s)
+        if (this->B[idx].s < this->B[this->nb - idx + 1].s)
             return 1;
-        if (this->B[j].s > this->B[this->nb - j + 1].s)
+        if (this->B[idx].s > this->B[this->nb - idx + 1].s)
             return -1;
-        if (this->B[j].v < this->B[this->nb - j + 1].v &&
-            this->B[j + 1].s < this->B[this->nb - j + 1].s)
+        if (this->B[idx].v < this->B[this->nb - idx + 1].v &&
+            this->B[idx + 1].s < this->B[this->nb - idx + 1].s)
             return 1;
-        if (this->B[j].v > this->B[this->nb - j + 1].v &&
-            this->B[j].s < this->B[nb - j].s)
+        if (this->B[idx].v > this->B[this->nb - idx + 1].v &&
+            this->B[idx].s < this->B[nb - idx].s)
             return 1;
         return -1;
     }
@@ -204,20 +204,20 @@ struct DiffCover {
         // Termination condition- only characters k remain to be appended
         // Recursively extend the prenecklace- unless only 0s remain to be
         // appended
-        for (int j = this->head; j >= this->a[1]; j = this->ListNext(j)) {
+        for (int idx = this->head; idx >= this->a[1]; idx = this->ListNext(idx)) {
             int z2, p2, c;
 
             this->run[2] = 0;
-            this->UpdateRunLength(j);
-            this->num[j]--;
-            if (this->num[j] == 0)
-                this->ListRemove(j);
-            this->a[2] = j;
+            this->UpdateRunLength(idx);
+            this->num[idx]--;
+            if (this->num[idx] == 0)
+                this->ListRemove(idx);
+            this->a[2] = idx;
             z2 = 2;
-            if (j != this->k)
+            if (idx != this->k)
                 z2 = 3;
             p2 = 1;
-            if (j != a[1])
+            if (idx != a[1])
                 p2 = 2;
             c = this->CheckRev();
             if (c == 0) {
@@ -228,9 +228,9 @@ struct DiffCover {
                 printf("c == 1\n");
                 this->Gen(3, p2, 1, z2, 1, FALSE);
             }
-            if (this->num[j] == 0)
-                this->ListAdd(j);
-            this->num[j]++;
+            if (this->num[idx] == 0)
+                this->ListAdd(idx);
+            this->num[idx]++;
             this->RestoreRunLength();
 
         }

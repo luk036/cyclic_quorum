@@ -115,27 +115,27 @@ public:
         // Initialize first layer weights and biases
         W1.resize(HIDDEN_SIZE1, std::vector<float>(inputSize));
         b1.resize(HIDDEN_SIZE1, 0.0f);
-        for (int i = 0; i < HIDDEN_SIZE1; ++i) {
-            for (int j = 0; j < inputSize; ++j) {
-                W1[i][j] = xavier(inputSize, HIDDEN_SIZE1);
+        for (int row = 0; row < HIDDEN_SIZE1; ++row) {
+            for (int col = 0; col < inputSize; ++col) {
+                W1[row][col] = xavier(inputSize, HIDDEN_SIZE1);
             }
         }
 
         // Initialize second layer weights and biases
         W2.resize(HIDDEN_SIZE2, std::vector<float>(HIDDEN_SIZE1));
         b2.resize(HIDDEN_SIZE2, 0.0f);
-        for (int i = 0; i < HIDDEN_SIZE2; ++i) {
-            for (int j = 0; j < HIDDEN_SIZE1; ++j) {
-                W2[i][j] = xavier(HIDDEN_SIZE1, HIDDEN_SIZE2);
+        for (int row = 0; row < HIDDEN_SIZE2; ++row) {
+            for (int col = 0; col < HIDDEN_SIZE1; ++col) {
+                W2[row][col] = xavier(HIDDEN_SIZE1, HIDDEN_SIZE2);
             }
         }
 
         // Initialize output layer weights and biases
         W3.resize(outputSize, std::vector<float>(HIDDEN_SIZE2));
         b3.resize(outputSize, 0.0f);
-        for (int i = 0; i < outputSize; ++i) {
-            for (int j = 0; j < HIDDEN_SIZE2; ++j) {
-                W3[i][j] = xavier(HIDDEN_SIZE2, outputSize);
+        for (int row = 0; row < outputSize; ++row) {
+            for (int col = 0; col < HIDDEN_SIZE2; ++col) {
+                W3[row][col] = xavier(HIDDEN_SIZE2, outputSize);
             }
         }
     }
@@ -144,31 +144,31 @@ public:
     std::vector<float> forward(const std::vector<float>& input) {
         // First hidden layer computation with ReLU activation
         std::vector<float> z1(HIDDEN_SIZE1, 0.0f);
-        for (int i = 0; i < HIDDEN_SIZE1; ++i) {
-            for (int j = 0; j < inputSize; ++j) {
-                z1[i] += W1[i][j] * input[j];
+        for (int row = 0; row < HIDDEN_SIZE1; ++row) {
+            for (int col = 0; col < inputSize; ++col) {
+                z1[row] += W1[row][col] * input[col];
             }
-            z1[i] += b1[i];
-            z1[i] = std::max(0.0f, z1[i]);  // ReLU activation
+            z1[row] += b1[row];
+            z1[row] = std::max(0.0f, z1[row]);  // ReLU activation
         }
 
         // Second hidden layer computation with ReLU activation
         std::vector<float> z2(HIDDEN_SIZE2, 0.0f);
-        for (int i = 0; i < HIDDEN_SIZE2; ++i) {
-            for (int j = 0; j < HIDDEN_SIZE1; ++j) {
-                z2[i] += W2[i][j] * z1[j];
+        for (int row = 0; row < HIDDEN_SIZE2; ++row) {
+            for (int col = 0; col < HIDDEN_SIZE1; ++col) {
+                z2[row] += W2[row][col] * z1[col];
             }
-            z2[i] += b2[i];
-            z2[i] = std::max(0.0f, z2[i]);  // ReLU activation
+            z2[row] += b2[row];
+            z2[row] = std::max(0.0f, z2[row]);  // ReLU activation
         }
 
         // Output layer computation (no activation function - returns logits)
         std::vector<float> z3(outputSize, 0.0f);
-        for (int i = 0; i < outputSize; ++i) {
-            for (int j = 0; j < HIDDEN_SIZE2; ++j) {
-                z3[i] += W3[i][j] * z2[j];
+        for (int row = 0; row < outputSize; ++row) {
+            for (int col = 0; col < HIDDEN_SIZE2; ++col) {
+                z3[row] += W3[row][col] * z2[col];
             }
-            z3[i] += b3[i];
+            z3[row] += b3[row];
         }
         return z3;
     }
@@ -183,25 +183,25 @@ public:
         std::lock_guard<std::mutex> lock(networkMutex);  // Thread-safe update
 
         // Update first layer weights and biases
-        for (int i = 0; i < HIDDEN_SIZE1; ++i) {
-            for (int j = 0; j < inputSize; ++j) {
-                W1[i][j] -= LEARNING_RATE * gradW1[i][j];
+        for (int row = 0; row < HIDDEN_SIZE1; ++row) {
+            for (int col = 0; col < inputSize; ++col) {
+                W1[row][col] -= LEARNING_RATE * gradW1[row][col];
             }
-            b1[i] -= LEARNING_RATE * gradB1[i];
+            b1[row] -= LEARNING_RATE * gradB1[row];
         }
         // Update second layer weights and biases
-        for (int i = 0; i < HIDDEN_SIZE2; ++i) {
-            for (int j = 0; j < HIDDEN_SIZE1; ++j) {
-                W2[i][j] -= LEARNING_RATE * gradW2[i][j];
+        for (int row = 0; row < HIDDEN_SIZE2; ++row) {
+            for (int col = 0; col < HIDDEN_SIZE1; ++col) {
+                W2[row][col] -= LEARNING_RATE * gradW2[row][col];
             }
-            b2[i] -= LEARNING_RATE * gradB2[i];
+            b2[row] -= LEARNING_RATE * gradB2[row];
         }
         // Update output layer weights and biases
-        for (int i = 0; i < outputSize; ++i) {
-            for (int j = 0; j < HIDDEN_SIZE2; ++j) {
-                W3[i][j] -= LEARNING_RATE * gradW3[i][j];
+        for (int row = 0; row < outputSize; ++row) {
+            for (int col = 0; col < HIDDEN_SIZE2; ++col) {
+                W3[row][col] -= LEARNING_RATE * gradW3[row][col];
             }
-            b3[i] -= LEARNING_RATE * gradB3[i];
+            b3[row] -= LEARNING_RATE * gradB3[row];
         }
     }
 };
@@ -211,12 +211,12 @@ std::vector<float> softmax(const std::vector<float>& logits) {
     std::vector<float> probs(logits.size());
     float maxLogit = *std::max_element(logits.begin(), logits.end());  // For numerical stability
     float sumExp = 0.0f;
-    for (size_t i = 0; i < logits.size(); ++i) {
-        probs[i] = std::exp(logits[i] - maxLogit);
-        sumExp += probs[i];
+    for (size_t idx = 0; idx < logits.size(); ++idx) {
+        probs[idx] = std::exp(logits[idx] - maxLogit);
+        sumExp += probs[idx];
     }
-    for (size_t i = 0; i < probs.size(); ++i) {
-        probs[i] /= sumExp;  // Normalize to get probabilities
+    for (size_t idx = 0; idx < probs.size(); ++idx) {
+        probs[idx] /= sumExp;  // Normalize to get probabilities
     }
     return probs;
 }
@@ -247,17 +247,17 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
         for (int step = 0; step < D - 1; ++step) {
             // Create state representation: concatenation of chosen and residues
             std::vector<float> state(2 * N, 0.0f);
-            for (int i = 0; i < N; ++i) {
-                state[i] = static_cast<float>(chosen[i]);
-                state[N + i] = static_cast<float>(residues[i]);
+            for (int idx = 0; idx < N; ++idx) {
+                state[idx] = static_cast<float>(chosen[idx]);
+                state[N + idx] = static_cast<float>(residues[idx]);
             }
 
             // Get action probabilities from policy network
             std::vector<float> logits = policyNet.forward(state);
 
             // Mask already chosen elements by setting their logits to very low value
-            for (int i = 0; i < N; ++i) {
-                if (chosen[i]) logits[i] = -1e9;
+            for (int idx = 0; idx < N; ++idx) {
+                if (chosen[idx]) logits[idx] = -1e9;
             }
 
             // Sample action from probability distribution
@@ -268,11 +268,11 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
             // Update environment state based on chosen action
             chosen[action] = 1;
             int newCovered = 0;
-            for (int j = 0; j < N; ++j) {
-                if (chosen[j] && j != action) {
+            for (int idx = 0; idx < N; ++idx) {
+                if (chosen[idx] && idx != action) {
                     // Calculate new residues covered by this action
-                    int res1 = (action - j + N) % N;
-                    int res2 = (j - action + N) % N;
+                    int res1 = (action - idx + N) % N;
+                    int res2 = (idx - action + N) % N;
                     if (!residues[res1]) {
                         residues[res1] = 1;
                         newCovered++;
@@ -292,8 +292,8 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
 
         // Check if current solution covers all residues
         bool isSolution = true;
-        for (int r : residues) {
-            if (!r) {
+        for (int residue : residues) {
+            if (!residue) {
                 isSolution = false;
                 break;
             }
@@ -304,8 +304,8 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
             std::lock_guard<std::mutex> lock(outputMutex);
             solutionFound = true;
             printf("\nSolution found in episode %d:\n", episode);
-            for (int i = 0; i < N; ++i) {
-                if (chosen[i]) printf("%d ", i);
+            for (int idx = 0; idx < N; ++idx) {
+                if (chosen[idx]) printf("%d ", idx);
             }
             printf("\n");
             return;
@@ -321,12 +321,12 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
 
         // Normalize returns for more stable training
         float mean = 0.0f, stddev = 0.0f;
-        for (float R : returns) mean += R;
+        for (float ret : returns) mean += ret;
         mean /= returns.size();
-        for (float R : returns) stddev += (R - mean) * (R - mean);
+        for (float ret : returns) stddev += (ret - mean) * (ret - mean);
         stddev = std::sqrt(stddev / returns.size());
         if (stddev < 1e-5) stddev = 1.0f;  // Avoid division by zero
-        for (float& R : returns) R = (R - mean) / stddev;  // Standardize returns
+        for (float& ret : returns) ret = (ret - mean) / stddev;  // Standardize returns
 
         // Initialize gradients for all weights and biases
         std::vector<std::vector<float>> gradW1(HIDDEN_SIZE1, std::vector<float>(2 * N, 0.0f));
@@ -342,9 +342,9 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
             std::vector<float> probs = softmax(logits);
 
             std::vector<float> gradLogits(N, 0.0f);
-            for (int i = 0; i < N; ++i) {
-                float indicator = (i == actions[t]) ? 1.0f : 0.0f;
-                gradLogits[i] = returns[t] * (indicator - probs[i]);  // Policy gradient
+            for (int idx = 0; idx < N; ++idx) {
+                float indicator = (idx == actions[t]) ? 1.0f : 0.0f;
+                gradLogits[idx] = returns[t] * (indicator - probs[idx]);  // Policy gradient
             }
         }
 
@@ -365,15 +365,15 @@ void findDifferenceCoverRL(int N, int D) {
 
     // Create and launch worker threads
     std::vector<std::thread> threads;
-    for (int i = 0; i < NUM_THREADS; ++i) {
+    for (int idx = 0; idx < NUM_THREADS; ++idx) {
         threads.emplace_back(workerThread, std::ref(policyNet), N, D,
                            std::ref(episodeCounter), std::ref(solutionFound),
                            std::ref(outputMutex));
     }
 
     // Wait for all threads to complete
-    for (auto& t : threads) {
-        t.join();
+    for (auto& thread : threads) {
+        thread.join();
     }
 
     // Print result if no solution was found

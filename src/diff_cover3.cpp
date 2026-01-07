@@ -94,17 +94,17 @@ class DcGenerator {
     }
 
     int CheckRev(int t_1) {
-        for (int j = a[1]; j <= t_1 / 2; ++j) {
-            if (q[j] < q[t_1 - j]) return 1;
-            if (q[j] > q[t_1 - j]) return -1;
+        for (int idx = a[1]; idx <= t_1 / 2; ++idx) {
+            if (q[idx] < q[t_1 - idx]) return 1;
+            if (q[idx] > q[t_1 - idx]) return -1;
         }
         return 0;
     }
 
     inline void step_forward(int t, int &count) {
         const int at = a[t];
-        for (int j = 0; j < t; ++j) {
-            const int aj = a[j];
+        for (int idx = 0; idx < t; ++idx) {
+            const int aj = a[idx];
             const int p_diff = at - aj;
             const int n_diff = N - p_diff;
             const int diff = p_diff < n_diff ? p_diff : n_diff;
@@ -118,8 +118,8 @@ class DcGenerator {
 
     inline void step_backward(int t) {
         const int at = a[t];
-        for (int j = 0; j < t; ++j) {
-            const int aj = a[j];
+        for (int idx = 0; idx < t; ++idx) {
+            const int aj = a[idx];
             const int p_diff = at - aj;
             const int n_diff = N - p_diff;
             const int diff = p_diff < n_diff ? p_diff : n_diff;
@@ -148,8 +148,8 @@ class DcGenerator {
         step_forward(D1, count);
         if (count >= N2) {
             printf("\n");
-            for (int i = 1; i <= D; ++i) {
-                printf("%3d ", a[i]);
+            for (int idx = 1; idx <= D; ++idx) {
+                printf("%3d ", a[idx]);
             }
             printf("\n");
             fflush(stdout);
@@ -203,13 +203,13 @@ class DcGenerator {
                 // s[max] = 0;
                 tail = max - 1;
             }
-            for (int j = tail; j >= at + 1; --j) {
-                a[t_1] = j;
-                // s[j] = t_1;
-                q[j] = 1;
+            for (int idx = tail; idx >= at + 1; --idx) {
+                a[t_1] = idx;
+                // s[idx] = t_1;
+                q[idx] = 1;
                 BraceFD(t_1, t_1, r1, count);
-                q[j] = 0;
-                // s[j] = 0;
+                q[idx] = 0;
+                // s[idx] = 0;
             }
         }
         step_backward(t);
@@ -251,13 +251,13 @@ class DcGenerator {
             tail = max - 1;
         }
 
-        for (int j = tail; j >= a1 + 1; --j) {
-            a[2] = j;
-            // s[j] = 2;
-            q[j] = 1;
+        for (int idx = tail; idx >= a1 + 1; --idx) {
+            a[2] = idx;
+            // s[idx] = 2;
+            q[idx] = 1;
             BraceFD(2, 2, r1, count);
-            q[j] = 0;
-            // s[j] = 0;
+            q[idx] = 0;
+            // s[idx] = 0;
         }
         // step_backward(1);
     }
@@ -276,9 +276,9 @@ void InitParallel(int N, int D) {
     const int start = (N + 1) / 2;
     const int end = (N - 1) / D + 1;
 
-    for (int j = start; j >= end; --j) {
-        results.emplace_back(pool.enqueue([N, D, j]() {
-            DcGenerator generator(N, D, j);
+    for (int idx = start; idx >= end; --idx) {
+        results.emplace_back(pool.enqueue([N, D, idx]() {
+            DcGenerator generator(N, D, idx);
             generator.BraceFD11();
         }));
     }
