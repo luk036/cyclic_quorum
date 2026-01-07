@@ -170,7 +170,7 @@ public:
             }
             z3[row] += b3[row];
         }
-        return z3;
+        return std::move(z3);
     }
 
     // Update network weights using gradients (thread-safe operation)
@@ -218,7 +218,7 @@ std::vector<float> softmax(const std::vector<float>& logits) {
     for (size_t idx = 0; idx < probs.size(); ++idx) {
         probs[idx] /= sumExp;  // Normalize to get probabilities
     }
-    return probs;
+    return std::move(probs);
 }
 
 // Worker thread function for parallel training
@@ -285,8 +285,8 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
             }
 
             // Store experience for training
-            states.push_back(state);
-            actions.push_back(action);
+            states.push_back(std::move(state));
+            actions.push_back(std::move(action));
             rewards.push_back(static_cast<float>(newCovered));  // Reward is number of newly covered residues
         }
 
