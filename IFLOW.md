@@ -35,7 +35,8 @@
 
 ## 编译和运行
 
-### 组合搜索:
+### 组合搜索
+
 ```bash
 # 编译
 g++ -std=c++11 -pthread -O3 -o diff_cover src/diff_cover.cpp
@@ -44,7 +45,8 @@ g++ -std=c++11 -pthread -O3 -o diff_cover src/diff_cover.cpp
 ./diff_cover [N] [D]
 ```
 
-### 强化学习:
+### 强化学习
+
 ```bash
 # 编译
 g++ -std=c++11 -pthread -O3 -o rl_cover src/RL_mt.cpp

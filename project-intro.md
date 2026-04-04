@@ -1,6 +1,6 @@
 # Finding Optimal Cyclic Quorum Systems
 
-### A Tale of Two Algorithms: Combinatorial Search & Deep Reinforcement Learning
+## A Tale of Two Algorithms: Combinatorial Search & Deep Reinforcement Learning
 
 ---
 
@@ -60,6 +60,7 @@ graph TD
     N2 -- Intersection --- N2
     style N2 fill:#f9f,stroke:#333,stroke-width:2px
 ```
+
 Any process needing access must get permission from a full quorum. The intersection guarantees coordination!
 
 ---
@@ -68,8 +69,8 @@ Any process needing access must get permission from a full quorum. The intersect
 
 We want fairness and efficiency:
 
-1.  **Equal Work:** All quorums have the same size, $d$.
-2.  **Equal Responsibility:** Every node is part of the same number of quorums.
+1. **Equal Work:** All quorums have the same size, $d$.
+2. **Equal Responsibility:** Every node is part of the same number of quorums.
 
 A system with these properties is called **symmetric**.
 
@@ -84,8 +85,9 @@ The theoretical best is $d \approx \sqrt{N}$, where $N$ is the total number of n
 CQS provides a simple, structured way to build powerful, symmetric quorum systems.
 
 **The Idea:**
-1.  Define **one** special "base quorum", $B_0$.
-2.  Generate all other quorums by cyclically "shifting" the base quorum.
+
+1. Define **one** special "base quorum", $B_0$.
+2. Generate all other quorums by cyclically "shifting" the base quorum.
 
 $$
 B_i = B_0 + i \pmod N = \{a_1+i, a_2+i, \dots, a_d+i\} \pmod N
@@ -99,10 +101,10 @@ This automatically guarantees the "Equal Work" and "Equal Responsibility" proper
 
 Let the base quorum be $B_0 = \{0, 1, 3\}$.
 
-*   $B_1 = \{0+1, 1+1, 3+1\} = \{1, 2, 4\}$
-*   $B_2 = \{0+2, 1+2, 3+2\} = \{2, 3, 5\}$
-*   $B_3 = \{0+3, 1+3, 3+3\} = \{3, 4, 6\}$
-*   ...and so on.
+* $B_1 = \{0+1, 1+1, 3+1\} = \{1, 2, 4\}$
+* $B_2 = \{0+2, 1+2, 3+2\} = \{2, 3, 5\}$
+* $B_3 = \{0+3, 1+3, 3+3\} = \{3, 4, 6\}$
+* ...and so on.
 
 ```mermaid
 graph TD
@@ -154,8 +156,8 @@ $$
 
 This approach is a methodical, brute-force search with clever optimizations.
 
-*   **Method:** Generate-and-test with backtracking.
-*   **Analogy:** Like solving a Sudoku puzzle by trying numbers and backtracking when you hit a dead end.
+* **Method:** Generate-and-test with backtracking.
+* **Analogy:** Like solving a Sudoku puzzle by trying numbers and backtracking when you hit a dead end.
 
 ```mermaid
 graph TD
@@ -172,9 +174,9 @@ graph TD
 
 ### Search Optimizations
 
-1.  **Pruning:** If a partial set can't possibly form a full difference cover, abandon that path immediately.
-2.  **Symmetry Breaking:** The problem has symmetries (like rotations and reflections). We use techniques from generating "combinatorial bracelets" to avoid checking equivalent solutions.
-3.  **Parallelism:** We use a **thread pool** to divide the massive search space. Each thread starts searching from a different initial number.
+1. **Pruning:** If a partial set can't possibly form a full difference cover, abandon that path immediately.
+2. **Symmetry Breaking:** The problem has symmetries (like rotations and reflections). We use techniques from generating "combinatorial bracelets" to avoid checking equivalent solutions.
+3. **Parallelism:** We use a **thread pool** to divide the massive search space. Each thread starts searching from a different initial number.
 
 ✅ **Guarantee:** This method is guaranteed to find the optimal solution if one exists.
 
@@ -184,9 +186,9 @@ graph TD
 
 A completely different idea: let's teach an AI to solve the puzzle!
 
-*   **Method:** Frame the problem as a strategic game.
-*   **The Player:** An AI agent (a `PolicyNetwork`).
-*   **The Goal:** The agent "plays" the game thousands of times, learning from trial and error what a good solution looks like.
+* **Method:** Frame the problem as a strategic game.
+* **The Player:** An AI agent (a `PolicyNetwork`).
+* **The Goal:** The agent "plays" the game thousands of times, learning from trial and error what a good solution looks like.
 
 ---
 
@@ -207,15 +209,16 @@ graph TD
         Reward -- Learn --> Agent;
     end
 ```
+
 The agent gets rewarded for making good moves and adjusts its strategy (`PolicyNetwork` weights) to get more rewards in the future.
 
 ---
 
 ### RL Optimizations
 
-*   **Shared Brain:** We run multiple agents (threads) in parallel.
-*   Crucially, they all share and update the **same neural network**.
-*   This allows them to learn from each other's successes and failures, dramatically speeding up the learning process.
+* **Shared Brain:** We run multiple agents (threads) in parallel.
+* Crucially, they all share and update the **same neural network**.
+* This allows them to learn from each other's successes and failures, dramatically speeding up the learning process.
 
 ❌ **No Guarantee:** This method is not guaranteed to find a solution. But it's fantastic for exploring huge search spaces where a systematic search would be impossible.
 
@@ -251,6 +254,6 @@ Both methods leverage **parallel processing** to tackle this computationally har
 
 ---
 
-# Thank You!
+## Thank You
 
-## Questions!
+### Questions

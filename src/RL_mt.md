@@ -1,11 +1,13 @@
 # Reinforcement Learning Approach to the Difference Cover Problem
 
 ## Abstract
+
 This paper presents a detailed analysis of a C++ implementation that uses reinforcement learning (RL) with multi-threading to solve the mathematical difference cover problem. The solution employs a three-layer neural network policy gradient method to learn optimal strategies through parallelized trial-and-error exploration.
 
 ## 1. Introduction to the Difference Cover Problem
 
 ### 1.1 Problem Definition
+
 The difference cover problem is a combinatorial mathematics challenge where for given integers $N$ (range size) and $D$ (subset size), we seek a subset $S \subseteq \{0,1,...,N-1\}$ with $|S| = D$ such that:
 
 $$
@@ -13,7 +15,9 @@ $$
 $$
 
 ### 1.2 Mathematical Significance
+
 Difference covers have applications in:
+
 - String algorithms (suffix array construction)
 - Distributed computing
 - Cryptography
@@ -30,6 +34,7 @@ graph TD
 ## 2. Program Architecture Overview
 
 ### 2.1 High-Level Structure
+
 The implementation consists of three core components:
 
 1. **Policy Network**: Neural network for decision making
@@ -68,6 +73,7 @@ classDiagram
 ## 3. Neural Network Implementation
 
 ### 3.1 Network Architecture
+
 The policy network uses a three-layer feedforward architecture:
 
 1. **Input Layer**: $2N$ nodes (chosen elements + covered residues)
@@ -76,6 +82,7 @@ The policy network uses a three-layer feedforward architecture:
 4. **Output Layer**: $N$ nodes (action probabilities)
 
 ### 3.2 Mathematical Formulation
+
 The forward pass computes:
 
 $$
@@ -88,6 +95,7 @@ z_3 &= W_3z_2 + b_3 \\
 $$
 
 ### 3.3 Weight Initialization
+
 Xavier initialization ensures proper gradient flow:
 
 $$
@@ -97,7 +105,9 @@ $$
 ## 4. Reinforcement Learning Framework
 
 ### 4.1 State Representation
+
 The state $s_t$ at step $t$ concatenates:
+
 - Binary vector of chosen elements
 - Binary vector of covered residues
 
@@ -106,9 +116,11 @@ s_t = [\text{chosen}_0,...,\text{chosen}_{N-1},\text{residues}_0,...,\text{resid
 $$
 
 ### 4.2 Action Space
+
 At each step, the agent selects an unselected number from $\{0,...,N-1\}$.
 
 ### 4.3 Reward Function
+
 Immediate reward for action $a_t$:
 
 $$
@@ -116,6 +128,7 @@ r_t = \text{count of newly covered residues}
 $$
 
 ### 4.4 Policy Gradient Update
+
 Using the REINFORCE algorithm:
 
 $$
@@ -131,7 +144,9 @@ $$
 ## 5. Parallel Training Mechanism
 
 ### 5.1 Thread Management
+
 The program spawns `NUM_THREADS` worker threads (default=10) that:
+
 1. Share the policy network
 2. Independently generate episodes
 3. Synchronously update network weights
@@ -152,6 +167,7 @@ sequenceDiagram
 ```
 
 ### 5.2 Synchronization Challenges
+
 - **Weight Updates**: Protected by mutex to prevent race conditions
 - **Solution Notification**: Atomic boolean flag for early termination
 - **Episode Counting**: Atomic integer for progress tracking
@@ -159,6 +175,7 @@ sequenceDiagram
 ## 6. Algorithmic Details
 
 ### 6.1 Episode Generation
+
 Each episode proceeds for exactly $D-1$ steps (initial element always 0):
 
 ```mermaid
@@ -172,6 +189,7 @@ flowchart TD
 ```
 
 ### 6.2 Gradient Calculation
+
 The gradient computation involves:
 
 1. Forward pass to get action probabilities
@@ -181,6 +199,7 @@ The gradient computation involves:
 ## 7. Mathematical Analysis
 
 ### 7.1 Problem Complexity
+
 The search space grows combinatorially:
 
 $$
@@ -191,6 +210,7 @@ For N=10, D=4: 210 possible solutions
 For N=20, D=6: 38,760 possible solutions
 
 ### 7.2 Learning Dynamics
+
 The policy gradient update can be expressed as:
 
 $$
@@ -198,18 +218,22 @@ $$
 $$
 
 Where:
+
 - $\alpha$ is learning rate (0.01)
 - $b_t$ is baseline (implemented via return normalization)
 
 ## 8. Implementation Optimizations
 
 ### 8.1 Numerical Stability
+
 Key techniques employed:
+
 - Log-sum-exp trick in softmax
 - Reward normalization
 - Gradient clipping (implicit via learning rate)
 
 ### 8.2 Performance Considerations
+
 - Batch updates from parallel workers
 - Lock contention minimization
 - Vectorized operations
@@ -217,6 +241,7 @@ Key techniques employed:
 ## 9. Experimental Results
 
 ### 9.1 Sample Solutions
+
 | N  | D  | Solution          | Episodes |
 |----|----|-------------------|----------|
 | 7  | 3  | 0, 1, 3           | 12,345   |
@@ -224,6 +249,7 @@ Key techniques employed:
 | 21 | 5  | 0, 1, 4, 14, 16   | 1,234,567|
 
 ### 9.2 Scaling Behavior
+
 ```mermaid
 graph LR
     A[N=7] -->|Fast| B[Seconds]
@@ -234,11 +260,13 @@ graph LR
 ## 10. Conclusion and Future Work
 
 ### 10.1 Key Achievements
+
 - Demonstrated RL applicability to combinatorial problems
 - Effective parallelization strategy
 - Generalizable approach to similar problems
 
 ### 10.2 Potential Enhancements
+
 1. **Architecture Improvements**:
    - Recurrent layers for sequence awareness
    - Attention mechanisms for large N
@@ -254,6 +282,7 @@ graph LR
 ## Appendix A: Complete Mathematical Derivation
 
 ### Policy Gradient Theorem
+
 The objective is to maximize expected return:
 
 $$
@@ -267,6 +296,7 @@ $$
 $$
 
 ### Discounted Return Variance Reduction
+
 For normalized returns:
 
 $$
@@ -274,12 +304,14 @@ $$
 $$
 
 Where:
+
 - $\mu_G$ is sample mean
 - $\sigma_G$ is sample standard deviation
 
 ## Appendix B: Complete Code Walkthrough
 
 ### Key Functions
+
 1. **PolicyNetwork::forward()**:
    - Implements the neural network computation
    - Uses ReLU activations for hidden layers
@@ -293,14 +325,15 @@ Where:
    - Essential for proper action selection
 
 ## References
+
 1. Sutton & Barto, "Reinforcement Learning: An Introduction"
 2. Covering Problems in Combinatorics, Springer 2019
 3. Neural Network Design, Hagan et al.
 
-
 ---
 
 ### 1. **Rainbow System Architecture** 🌈
+
 ```mermaid
 flowchart LR
     A[Input:<br/>N, D]:::input --> B[Policy Network]:::neural
@@ -327,6 +360,7 @@ flowchart LR
 ---
 
 ### 2. **Neon Neural Network** 💡
+
 ```mermaid
 flowchart LR
     A["Input Layer<br/>(2N nodes)"]:::input --> B["Hidden Layer 1<br/>(256 nodes)"]:::hidden1
@@ -344,6 +378,7 @@ flowchart LR
 ---
 
 ### 3. **Thread Lifecycle in Gold & Purple** 🟣🟡
+
 ```mermaid
 flowchart LR
     A[Initialize State]:::init --> B[Policy Forward]:::neural
@@ -370,6 +405,7 @@ flowchart LR
 ---
 
 ### 4. **Parallel Training Carnival** 🎪
+
 ```mermaid
 flowchart LR
     A[Shared Policy Network]:::neural --> B[Thread 1]:::thread1
@@ -402,6 +438,7 @@ flowchart LR
 ---
 
 ### 5. **State Encoding Fireworks** 🎆
+
 ```mermaid
 flowchart LR
     A[Current State]:::state --> B[Chosen Elements<br/>1 0 1 0...]:::chosen
@@ -419,6 +456,7 @@ flowchart LR
 ---
 
 ### 6. **Reward Calculation Party** 🎉
+
 ```mermaid
 flowchart LR
     A[Action]:::action --> B[New Covered<br/>Residues]:::math

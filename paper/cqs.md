@@ -8,7 +8,6 @@ The first approach presented is a systematic combinatorical search algorithm. Th
 
 Both methodologies significantly enhance efficiency by utilizing parallel processing, employing multi-threading to divide the search space or run multiple learning agents simultaneously. The recursive search algorithm employs a divide-and-conquer strategy, dividing the search space into partitions and assigning each partition to a separate thread. The RL approach, on the other hand, employs a multi-agent system, with each agent learning independently but sharing the same neural network as an artificial "brain".
 
-
 ## 1. Introduction
 
 In the realm of distributed computing and related fields, ensuring coordination, consistency, and efficient resource utilization among multiple independent entities is paramount. Quorum systems have emerged as a fundamental concept for achieving such goals, particularly in scenarios requiring mutual exclusion or the reliable processing of distributed data. A quorum system is essentially a collection of subsets of participating entities (often referred to as sites or processes), where any two subsets (quorums) must have at least one entity in common. This non-empty intersection property is crucial for guaranteeing that any two operations requiring a quorum will interact at some common point, thereby allowing for conflict detection and resolution.
@@ -18,9 +17,10 @@ While the basic quorum concept provides a framework for coordination, designing 
 **Cyclic Quorum Systems (CQS)** represent a structured approach to constructing quorum systems that often achieve or come very close to these desirable properties. CQS are based on concepts from combinatorial theory, particularly cyclic block designs and cyclic difference sets. A defining characteristic of CQS is that the entire set of quorums can be generated cyclically from a single base quorum. This inherent structure simplifies the description and management of the quorum system.
 
 The utility of Cyclic Quorum Systems extends beyond their original application in distributed mutual exclusion. Recent research has demonstrated their effectiveness in managing complex distributed computations and optimizing resource usage in data-intensive tasks. This includes their application in:
-*   **Distributed All-Pairs Algorithms:** CQS have been successfully applied to problems requiring computations between all possible pairs of data elements in a large dataset, offering significant improvements in memory efficiency and workload distribution.
-*   **Wireless Sensor Networks (WSNs):** A variant called CQS-Pair has been developed for heterogeneous wakeup scheduling in WSNs, enabling nodes with different power-saving requirements to maintain connectivity.
-*   **Attention Computation in Deep Learning:** CQS-Attention is a novel sequence parallelism scheme leveraging CQS theory to scale the standard self-attention computation for very long sequences in transformer models, addressing the significant memory bottleneck.
+
+* **Distributed All-Pairs Algorithms:** CQS have been successfully applied to problems requiring computations between all possible pairs of data elements in a large dataset, offering significant improvements in memory efficiency and workload distribution.
+* **Wireless Sensor Networks (WSNs):** A variant called CQS-Pair has been developed for heterogeneous wakeup scheduling in WSNs, enabling nodes with different power-saving requirements to maintain connectivity.
+* **Attention Computation in Deep Learning:** CQS-Attention is a novel sequence parallelism scheme leveraging CQS theory to scale the standard self-attention computation for very long sequences in transformer models, addressing the significant memory bottleneck.
 
 The main objective of this paper is to explore the application of difference covers in constructing optimal cyclic quorum systems. Difference covers, also known as difference sets, are special mathematical arrangements or sets of numbers that possess a unique property: the differences between any two numbers within the set cover a wide range of values, ideally every possible remainder when divided by a given $N$, without excessive repetition. The problem involves selecting exactly $d$ numbers from a total range of 0 to $N$-1. Previously, Table 1 and Table 2 in list base quorums (denoted $B_1$ using 1-based indexing for sites, $B_1=\{a_1, \dots, a_d\}$) for optimal cyclic quorum schemes for $N$ from 4 to 111. In this paper, we attempt to extend the search for optimal cyclic quorum schemes to $N=150$ and beyond.
 
@@ -40,10 +40,11 @@ A quorum system $\mathcal{Q}$ over $U$ is a collection of non-empty subsets of $
 This property is fundamental as it guarantees that any two operations requiring permission from a quorum will consult at least one common site, which can then be used to mediate conflicts or ensure consistency.
 
 For distributed algorithms like mutual exclusion, certain additional properties are often desirable for fairness and efficiency:
-*   **A1. Site Inclusion:** Each site $P_i$ is contained in its own quorum $S_i$. This property might be implicitly assumed or explicitly defined depending on the specific application.
-*   **A2. Non-empty Intersection:** As stated above, any two quorums must intersect. This is the defining property of a quorum system.
-*   **A3. Equal Work:** All quorums in the system have the same size. If $S_i$ is the quorum for site $P_i$, then $|S_i| = d$ for all $i \in \{1, 2, \dots, N\}$, where $d$ is an integer less than $N$. The size of a quorum is often denoted by $d$ or $k$.
-*   **A4. Equal Responsibility:** Each site is contained in the same number of quorums. Specifically, for all $P_i \in U$, $P_i$ is contained in $d$ quorums $S_j$.
+
+* **A1. Site Inclusion:** Each site $P_i$ is contained in its own quorum $S_i$. This property might be implicitly assumed or explicitly defined depending on the specific application.
+* **A2. Non-empty Intersection:** As stated above, any two quorums must intersect. This is the defining property of a quorum system.
+* **A3. Equal Work:** All quorums in the system have the same size. If $S_i$ is the quorum for site $P_i$, then $|S_i| = d$ for all $i \in \{1, 2, \dots, N\}$, where $d$ is an integer less than $N$. The size of a quorum is often denoted by $d$ or $k$.
+* **A4. Equal Responsibility:** Each site is contained in the same number of quorums. Specifically, for all $P_i \in U$, $P_i$ is contained in $d$ quorums $S_j$.
 
 A set of quorums satisfying properties A3 and A4 is called **symmetric**. The goal in designing efficient quorum systems is to minimize the quorum size $d$ while maintaining these properties.
 
@@ -80,24 +81,26 @@ The connection between cyclic quorum systems and relaxed difference sets is form
 Finding a base quorum $B_0$ that forms a cyclic quorum system with the minimum size $d$ is equivalent to finding a relaxed $(N, d)$-difference set with minimum $d$. For cases where $N = d(d - 1) + 1$ and $d-1$ is a prime power, the existence of cyclic $(N, d, 1)$-difference sets (known as Singer difference sets) is guaranteed, and these sets form cyclic quorum systems where any two quorums intersect at exactly one site. Singer difference sets lead to particularly efficient CQS with no redundancy in pair coverage (discussed later). For other values of $N$, finding the optimal base quorum often requires exhaustive search, although methods based on the Multiplier Theorem can speed up the construction of certain types of difference sets. The Multiplier Theorem provides conditions under which a prime $p$ is a "multiplier" of a difference set, meaning multiplication by $p$ permutes the elements of the difference set, aiding in their discovery.
 
 Examples of cyclic quorum systems and difference sets include:
-*   For $N=7$, the set $\{1, 2, 4\} \pmod 7$ is a cyclic $(7, 3, 1)$-difference set. This is a Singer difference set ($7 = 3(3 - 1) + 1$, $3-1=2$ is prime power). The cyclic quorums are $\{1, 2, 4\}$, $\{2, 3, 5\}$, $\{3, 4, 6\}$, $\{4, 5, 0\}$, $\{5, 6, 1\}$, $\{6, 0, 2\}$, $\{0, 1, 3\}$.
-*   For $N=8$, the set $\{0, 1, 2, 4\} \pmod 8$ is a base quorum. The quorums are $B_0 = \{0, 1, 2, 4\}$, $B_1 = \{1, 2, 3, 5\}$, $B_2 = \{2, 3, 4, 6\}$, $B_3 = \{3, 4, 5, 7\}$, $B_4 = \{4, 5, 6, 0\}$, $B_5 = \{5, 6, 7, 1\}$, $B_6 = \{6, 7, 0, 2\}$, $B_7 = \{7, 0, 1, 3\}$.
-*   Table 1 and Table 2 in list base quorums (denoted $B_1$ using 1-based indexing for sites, $B_1=\{a_1, \dots, a_d\}$) for optimal cyclic quorum schemes for $N$ from 4 to 111, found through exhaustive search. For example, for $N=4$, the base quorum is $\{1, 2, 3\}$. For $N=10$, the base quorum is $\{1, 2, 3, 6\}$.
+
+* For $N=7$, the set $\{1, 2, 4\} \pmod 7$ is a cyclic $(7, 3, 1)$-difference set. This is a Singer difference set ($7 = 3(3 - 1) + 1$, $3-1=2$ is prime power). The cyclic quorums are $\{1, 2, 4\}$, $\{2, 3, 5\}$, $\{3, 4, 6\}$, $\{4, 5, 0\}$, $\{5, 6, 1\}$, $\{6, 0, 2\}$, $\{0, 1, 3\}$.
+* For $N=8$, the set $\{0, 1, 2, 4\} \pmod 8$ is a base quorum. The quorums are $B_0 = \{0, 1, 2, 4\}$, $B_1 = \{1, 2, 3, 5\}$, $B_2 = \{2, 3, 4, 6\}$, $B_3 = \{3, 4, 5, 7\}$, $B_4 = \{4, 5, 6, 0\}$, $B_5 = \{5, 6, 7, 1\}$, $B_6 = \{6, 7, 0, 2\}$, $B_7 = \{7, 0, 1, 3\}$.
+* Table 1 and Table 2 in list base quorums (denoted $B_1$ using 1-based indexing for sites, $B_1=\{a_1, \dots, a_d\}$) for optimal cyclic quorum schemes for $N$ from 4 to 111, found through exhaustive search. For example, for $N=4$, the base quorum is $\{1, 2, 3\}$. For $N=10$, the base quorum is $\{1, 2, 3, 6\}$.
 
 The existence of cyclic quorum systems with sizes close to the theoretical lower bound for arbitrary $N$, coupled with their symmetric properties, makes them attractive for managing distributed resources and computations.
 
-**Example of a Cyclic Quorum System Construction**
+## Example of a Cyclic Quorum System Construction
 
 Let's construct a cyclic quorum system for $N=8$ using the base quorum $B_0 = \{0, 1, 2, 4\} \pmod 8$. The size of the quorum is $d=4$.
 The full set of 8 quorums is generated by adding $i \in \{0, 1, \dots, 7\}$ modulo 8 to the elements of $B_0$:
-*   $B_0 = \{0, 1, 2, 4\} \pmod 8$
-*   $B_1 = \{0+1, 1+1, 2+1, 4+1\} \pmod 8 = \{1, 2, 3, 5\} \pmod 8$
-*   $B_2 = \{0+2, 1+2, 2+2, 4+2\} \pmod 8 = \{2, 3, 4, 6\} \pmod 8$
-*   $B_3 = \{0+3, 1+3, 2+3, 4+3\} \pmod 8 = \{3, 4, 5, 7\} \pmod 8$
-*   $B_4 = \{0+4, 1+4, 2+4, 4+4\} \pmod 8 = \{4, 5, 6, 0\} \pmod 8$
-*   $B_5 = \{0+5, 1+5, 2+5, 4+5\} \pmod 8 = \{5, 6, 7, 1\} \pmod 8$
-*   $B_6 = \{0+6, 1+6, 2+6, 4+6\} \pmod 8 = \{6, 7, 0, 2\} \pmod 8$
-*   $B_7 = \{0+7, 1+7, 2+7, 4+7\} \pmod 8 = \{7, 0, 1, 3\} \pmod 8$
+
+* $B_0 = \{0, 1, 2, 4\} \pmod 8$
+* $B_1 = \{0+1, 1+1, 2+1, 4+1\} \pmod 8 = \{1, 2, 3, 5\} \pmod 8$
+* $B_2 = \{0+2, 1+2, 2+2, 4+2\} \pmod 8 = \{2, 3, 4, 6\} \pmod 8$
+* $B_3 = \{0+3, 1+3, 2+3, 4+3\} \pmod 8 = \{3, 4, 5, 7\} \pmod 8$
+* $B_4 = \{0+4, 1+4, 2+4, 4+4\} \pmod 8 = \{4, 5, 6, 0\} \pmod 8$
+* $B_5 = \{0+5, 1+5, 2+5, 4+5\} \pmod 8 = \{5, 6, 7, 1\} \pmod 8$
+* $B_6 = \{0+6, 1+6, 2+6, 4+6\} \pmod 8 = \{6, 7, 0, 2\} \pmod 8$
+* $B_7 = \{0+7, 1+7, 2+7, 4+7\} \pmod 8 = \{7, 0, 1, 3\} \pmod 8$
 
 This set of 8 quorums forms a cyclic quorum system for $N=8$. Each quorum has size 4 (equal work). To verify equal responsibility, we can count how many quorums each site appears in. For example, site 0 appears in $B_0, B_4, B_6, B_7$. It appears in 4 quorums, which is equal to the quorum size $d=4$. This holds for all sites due to the cyclic construction. The intersection property can be verified by checking any two quorums. For example, $B_0 \cap B_1 = \{1, 2\} \neq \emptyset$.
 
@@ -142,9 +145,10 @@ A **prenecklace** is a prefix of some necklace. The set of all k-ary prenecklace
 **Bracelets** are a variation of necklaces that are symmetric under both rotation and reversal. A k-ary bracelet is the lexicographically minimal string equivalent under these two operations. $B_k(n)$ represents the set of length $n$ bracelets, and $B_k(n)$ its cardinality. For a binary example ($k=2$), 001011 is a bracelet because its rotations (e.g., 010110) and reversals (e.g., 001011 reversed is 001101) are considered, and 001011 is the smallest among them.
 
 A critical property for restricted classes of these objects is **fixed density**. A k-ary string is said to be of fixed density if the number of occurrences of symbol 0 is fixed. Let us define density, denoted by $d$, as the number of non-zero symbols. Therefore, a string of length $n$ with density $d$ has $d$ non-zero symbols and $n-d$ zero symbols. The notation for sets of objects with fixed density adds the parameter $d$:
-*   $N_k(n, d)$: the set of k-ary necklaces having length $n$ and density $d$.
-*   $P_k(n, d)$: the set of k-ary prenecklaces having length $n$ and density $d$.
-*   $B_k(n, d)$: the set of k-ary bracelets having length $n$ and density $d$.
+
+* $N_k(n, d)$: the set of k-ary necklaces having length $n$ and density $d$.
+* $P_k(n, d)$: the set of k-ary prenecklaces having length $n$ and density $d$.
+* $B_k(n, d)$: the set of k-ary bracelets having length $n$ and density $d$.
 Their cardinalities are denoted $N_k(n, d)$, $P_k(n, d)$, and $B_k(n, d)$, respectively.
 
 Counting the number of objects with specific symbol occurrences is possible using formulas. For necklaces with $n_i$ occurrences of symbol $i$, where $0 \le i < k$, the number $N_k(n_0, n_1, \ldots, n_{k-1})$ is given by:
@@ -170,10 +174,11 @@ The base `Gen(t, p)` algorithm generates prenecklaces in lexicographic order and
 To generate fixed-density necklaces efficiently, Ruskey and Sawada developed a modified algorithm, `Gen2(t, p)`. This modification focuses on generating prenecklaces whose last character is non-zero, effectively incrementing the density rather than just the length in each recursive step. It uses an array `a` to store the positions of non-zero characters and an array `b` for their values. The parameter `t` represents the current density, and `at` is the length of the current prenecklace. Valid positions and values for the next non-zero character are determined to maintain the prenecklace property and lexicographic order.
 
 Building on `Gen2`, the fixed-density necklace algorithm `GenFix(t, p)` incorporates specific optimizations for the fixed-density constraint. These optimizations include:
-1.  **Restricting the position of the first non-zero character:** It must be between $n-d+1$ and $(n-1)/d+1$ inclusive.
-2.  **Restricting the position of the $i$-th non-zero character:** It must be at or before the $(n-d+i)$-th position.
-3.  **Stopping recursion early:** Stop generating when $d-1$ non-zero characters have been placed. The last non-zero symbol (the $d$-th one) is placed at the $n$-th position during the printing step.
-4.  **Determining valid values for the $n$-th position:** This is handled in the `PrintIt(p)` function with an additional constant-time test.
+
+1. **Restricting the position of the first non-zero character:** It must be between $n-d+1$ and $(n-1)/d+1$ inclusive.
+2. **Restricting the position of the $i$-th non-zero character:** It must be at or before the $(n-d+i)$-th position.
+3. **Stopping recursion early:** Stop generating when $d-1$ non-zero characters have been placed. The last non-zero symbol (the $d$-th one) is placed at the $n$-th position during the printing step.
+4. **Determining valid values for the $n$-th position:** This is handled in the `PrintIt(p)` function with an additional constant-time test.
 
 The CAT nature of `GenFix` is proven by bounding the size of its computation tree, which consists of prenecklaces ending in a non-zero character with densities from 1 to $d-1$. The size of this tree, CompTree$_k(n, d)$, is bounded by a sum involving the number of such prenecklaces, denoted $P'_k(j, i)$ for length $j$ and density $i$. Lemma 4.1 shows that $P'_k(n, d) \le N_k(n, d) + L_k(n, d)$. Lemmas 4.3 and 4.4 provide bounds relating $N_k(n, d)$ and $L_k(n, d)$ to combinatorial terms and each other, such as $N_k(n, d) \le 2L_k(n, d)$ and $L_k(n, d) \le \frac{1}{n} \binom{n}{d}(k-1)^d$. Using these bounds and inductive proofs, the total computation tree size is shown to be proportional to $N_k(n, d)$, leading to the conclusion that `GenFix` is CAT (Theorem 4.7).
 
@@ -182,8 +187,9 @@ The CAT nature of `GenFix` is proven by bounding the size of its computation tre
 Generating bracelets with fixed density presents additional challenges compared to necklaces. A simple modification of the necklace generation algorithm is a starting point, but it does not immediately yield a CAT algorithm.
 
 A **naive algorithm**, SimpleBFD(t, p, r), can be derived by modifying the necklace generation algorithm (like `Gen(t, p)` or a variant) to list fixed density bracelets. This algorithm needs to ensure two things:
-1.  All generated prenecklaces must have a density equal to the target density $d$. This requires keeping track of the count of non-zero characters.
-2.  Only bracelets are listed.
+
+1. All generated prenecklaces must have a density equal to the target density $d$. This requires keeping track of the count of non-zero characters.
+2. Only bracelets are listed.
 
 Checking if a string is a bracelet typically involves comparing it to the necklace of its reversed string. A direct implementation of this check takes $O(n)$ time for a string of length $n$, which prevents the algorithm from being CAT.
 
@@ -200,8 +206,9 @@ To achieve a CAT algorithm for generating fixed-density bracelets, the approach 
 **Fixed Density Optimizations (from):** As discussed, these optimizations, used in `GenFix`, involve increasing the density (number of non-zero symbols) by one in each main recursive step instead of appending single characters. They use arrays `a` (positions of non-zeros) and `b` (values of non-zeros). Specific density constraints are applied to the positions of non-zero symbols, and recursion stops when $d-1$ non-zeros are placed, handling the last non-zero at position $n$ separately.
 
 **Bracelet Optimizations (from):** These optimizations are aimed at making the reversal check efficient.
-1.  **Limited Reverse Checks:** Instead of checking all reverse rotations, if a necklace $\alpha$ starts with $i$ identical characters $a$ followed by a different character ($a^i b \ldots$), only specific reverse rotations starting with $a^i$ need to be checked. This check can be done early, but still might take $O(t)$ work for a prenecklace of length $t$.
-2.  **Incremental Reverse Check:** The final comparison $a_{r+1} \cdots a_n \le a_n \cdots a_{r+1}$ (from Lemma 3.1) is made efficient by starting the comparison once the "middle point" $\lfloor (n-r)/2 \rfloor + r$ is reached. An additional parameter, RS (Reverse Status), is used to store the intermediate comparison results. RS is updated based on comparing the current character $a_{t-1}$ with its corresponding character in the reversed substring $a_{n-t+2+r}$. This makes the comparison a constant time test per recursive call.
+
+1. **Limited Reverse Checks:** Instead of checking all reverse rotations, if a necklace $\alpha$ starts with $i$ identical characters $a$ followed by a different character ($a^i b \ldots$), only specific reverse rotations starting with $a^i$ need to be checked. This check can be done early, but still might take $O(t)$ work for a prenecklace of length $t$.
+2. **Incremental Reverse Check:** The final comparison $a_{r+1} \cdots a_n \le a_n \cdots a_{r+1}$ (from Lemma 3.1) is made efficient by starting the comparison once the "middle point" $\lfloor (n-r)/2 \rfloor + r$ is reached. An additional parameter, RS (Reverse Status), is used to store the intermediate comparison results. RS is updated based on comparing the current character $a_{t-1}$ with its corresponding character in the reversed substring $a_{n-t+2+r}$. This makes the comparison a constant time test per recursive call.
 
 ### Merging Optimizations and Handling Complexity
 
@@ -336,41 +343,40 @@ Table 1: Output (112-150)
 The second approach treats the problem of finding difference covers as a **strategic game** to be solved by artificial intelligence. It uses **reinforcement learning (RL)**, a technique akin to **teaching a computer through trial and error**. This is compared to learning a video game by experimenting with different strategies and improving over time.
 
 At the heart of this RL implementation is an **artificial "brain" called a PolicyNetwork**. This is a neural network designed for decision-making. The PolicyNetwork has **three layers of artificial neurons**.
-- The **first layer (Input Layer)** receives information about the **current state of the puzzle**.
-- The **middle layers (Hidden Layers)** process this information.
-- The **final layer (Output Layer)** makes the decision on **which number to pick next**.
+
+* The **first layer (Input Layer)** receives information about the **current state of the puzzle**.
+* The **middle layers (Hidden Layers)** process this information.
+* The **final layer (Output Layer)** makes the decision on **which number to pick next**.
 
 The PolicyNetwork starts with random decision-making capabilities. However, through the learning process, it **learns and improves over time by remembering what worked well and what didn't**. The weights and biases of the network are initialized using **Xavier initialization**, a technique mentioned as helping to maintain variance of activations across layers for better training. ReLU (Rectified Linear Unit) activation is applied in the hidden layers.
 
 The learning process involves the program playing the "difference cover game" many times, potentially thousands. Each attempt or game is referred to as an **episode**.
 
-1.  **State Representation**: In each step of an episode, the AI observes the **current situation** of the puzzle. This situation includes which numbers have already been picked and which mathematical differences have been covered so far. This information is converted into a numerical format, specifically a **"state vector"**. The state vector has a size of 2*N: N elements representing which numbers are chosen (1 if chosen, 0 otherwise) and N elements representing which residues/differences are covered (1 if covered, 0 otherwise).
+1. **State Representation**: In each step of an episode, the AI observes the **current situation** of the puzzle. This situation includes which numbers have already been picked and which mathematical differences have been covered so far. This information is converted into a numerical format, specifically a **"state vector"**. The state vector has a size of 2*N: N elements representing which numbers are chosen (1 if chosen, 0 otherwise) and N elements representing which residues/differences are covered (1 if covered, 0 otherwise).
 
     **Conceptual Example of State Vector (Illustrative):**
 
     Imagine N=5, D=3. Suppose {0} is chosen initially.
-    Chosen vector (size 5): ``
-    Residues covered (size 5): `` (only difference 0 is covered initially, modulo 5)
+    Chosen vector (size 5): ``Residues covered (size 5):`` (only difference 0 is covered initially, modulo 5)
     State vector (size 10): `[1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f]` (concatenation)
 
     If the AI then chooses number 1.
-    Chosen vector: ``
-    Differences between 0 and 1: 1-0=1 (diff 1), 0-1=-1 (mod 5 is 4).
+    Chosen vector: ``Differences between 0 and 1: 1-0=1 (diff 1), 0-1=-1 (mod 5 is 4).
     Residues covered: difference 0 (from 0-0, 1-1), difference 1 (from 1-0), difference 4 (from 0-1).
-    Residues vector: ``
+    Residues vector:``
     New State vector: `[1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f]`
 
-2.  **Decision Making**: The PolicyNetwork takes the state vector as input and performs a **forward pass**. It processes this information through its layers and calculates raw scores called **"logits"** for picking each of the N possible numbers. These logits are then converted into **probabilities** for picking each remaining number using the **Softmax function**. Numbers that the network considers more promising receive higher probabilities. Crucially, already chosen numbers are masked by setting their logits to a very low value before applying softmax, ensuring they are not selected again.
+2. **Decision Making**: The PolicyNetwork takes the state vector as input and performs a **forward pass**. It processes this information through its layers and calculates raw scores called **"logits"** for picking each of the N possible numbers. These logits are then converted into **probabilities** for picking each remaining number using the **Softmax function**. Numbers that the network considers more promising receive higher probabilities. Crucially, already chosen numbers are masked by setting their logits to a very low value before applying softmax, ensuring they are not selected again.
 
     The Softmax function is defined as:
     $$ \text{Softmax}(z_i) = \frac{e^{z_i - \max(z)}}{\sum_j e^{z_j - \max(z)}} $$
     where $z_i$ are the logits, and $\max(z)$ is the maximum logit for numerical stability. This function outputs a probability distribution over the possible actions (picking a number).
 
-3.  **Action Selection**: The AI then **randomly selects a number (action)** based on the probabilities generated by the network. Random selection based on probabilities allows the AI to **explore different strategies** rather than always picking the seemingly best option, which is important for learning. The selection is done using a discrete distribution based on the calculated probabilities.
+3. **Action Selection**: The AI then **randomly selects a number (action)** based on the probabilities generated by the network. Random selection based on probabilities allows the AI to **explore different strategies** rather than always picking the seemingly best option, which is important for learning. The selection is done using a discrete distribution based on the calculated probabilities.
 
-4.  **Reward Calculation**: After selecting a number and updating the puzzle state (marking the number as chosen, updating covered residues), the AI receives a **"reward"**. This reward is based on **how many new mathematical differences this choice covers**. More new coverage results in a better (higher) reward. This immediate reward signal guides the learning process.
+4. **Reward Calculation**: After selecting a number and updating the puzzle state (marking the number as chosen, updating covered residues), the AI receives a **"reward"**. This reward is based on **how many new mathematical differences this choice covers**. More new coverage results in a better (higher) reward. This immediate reward signal guides the learning process.
 
-5.  **Learning**: After completing a full episode (attempting to pick D numbers), the AI analyzes what happened. If the episode led to finding a solution, or if certain actions or sequences of actions resulted in good cumulative rewards, the PolicyNetwork **adjusts its internal parameters (weights and biases)** to make similar decisions more likely in the future. This adjustment involves calculating **"gradients"** – mathematical measures of how much each weight and bias should change to improve performance. These gradients are computed using a policy gradient method, working backward from the episode's outcomes and rewards. The rewards collected during the episode are typically aggregated into **"discounted returns"**, which account for future potential rewards, often using a discount factor (GAMMA). These returns are then normalized for more stable training.
+5. **Learning**: After completing a full episode (attempting to pick D numbers), the AI analyzes what happened. If the episode led to finding a solution, or if certain actions or sequences of actions resulted in good cumulative rewards, the PolicyNetwork **adjusts its internal parameters (weights and biases)** to make similar decisions more likely in the future. This adjustment involves calculating **"gradients"** – mathematical measures of how much each weight and bias should change to improve performance. These gradients are computed using a policy gradient method, working backward from the episode's outcomes and rewards. The rewards collected during the episode are typically aggregated into **"discounted returns"**, which account for future potential rewards, often using a discount factor (GAMMA). These returns are then normalized for more stable training.
 
 The core update rule for network parameters (like weights W or biases b) based on gradients (gradW or gradB) and the learning rate is described as:
 $$\text{parameter} = \text{parameter} - \text{LEARNING RATE} \times \text{gradient}$$
@@ -430,11 +436,10 @@ The recursive search systematically explores combinations using backtracking and
 
 The problem of finding difference covers is a combinatorial challenge with practical applications. The sources present two distinct, parallelized approaches to tackle this problem. The recursive search offers a systematic, guaranteed method that leverages mathematical properties and pruning to efficiently explore the solution space, enhanced by parallel processing across different search partitions. The reinforcement learning approach, on the other hand, frames the problem as a game and learns a strategy through trial and error guided by rewards, using a neural network as its decision-making core and accelerating learning through parallel worker threads sharing the same network. While the recursive method guarantees finding solutions if they exist within its search space, the RL method offers a learned approach that may discover solutions but is not guaranteed to find one within a fixed number of attempts. Both demonstrate the power of parallel computation in speeding up complex search and learning processes.
 
-
-
 \clearpage
 
 ## References
+
  W.-S. Luk and T.-T. Wong, ‘‘Two new quorum based algorithms for distributed mutual exclusion,’’ in Proc. 17th Int. Conf. Distrib. Comput. Syst., 1997, pp. 100–106.
 
  C. J. Kleinheksel and A. K. Somani, ‘‘Scaling distributed all-pairs algorithms,’’ in Proc. Int. Conf. Inf. Sci. Appl., 2016, pp. 247–257.

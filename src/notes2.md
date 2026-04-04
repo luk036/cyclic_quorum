@@ -1,4 +1,6 @@
-A difference cover is a mathematical concept used in combinatorics and string algorithms. Here are the key points about difference covers:
+# Difference Cover
+
+A difference cover is a mathematical concept
 
 ---
 
@@ -12,7 +14,7 @@ A difference cover Dq modulo q is a subset of [0..q) such that all values in [0.
 
 ## Properties
 
-- For any q, there exists a difference cover Dq of size O(√q)[1].
+- For any q, there exists a difference cover Dq of size O(√q).
 - The goal is typically to find the smallest possible difference cover for a given q.
 
 ---
@@ -53,18 +55,17 @@ Difference covers provide a way to efficiently compare suffixes in string algori
 
 ---
 
-## Citations:
+## References
 
-[1] https://en.wikipedia.org/wiki/Binomial_coefficient
-[2] https://www.sciencedirect.com/science/article/abs/pii/S0020025511000910
-[3] https://www.reddit.com/r/computerscience/comments/qtet0i/what_does_k_mean_in_onk_or_onk/
-[4] https://stackoverflow.com/questions/27301287/what-is-the-difference-between-onk-and-onk-in-time-complexity
-[5] https://www.cs.helsinki.fi/u/tpkarkka/opetus/12s/spa/lecture12.pdf
-[6] https://www.cuemath.com/n-choose-k-formula/
-[7] https://en.wikipedia.org/wiki/Combination
+[1] <https://en.wikipedia.org/wiki/Binomial_coefficient>
+[2] <https://www.sciencedirect.com/science/article/abs/pii/S0020025511000910>
+[3] <https://www.reddit.com/r/computerscience/comments/qtet0i/what_does_k_mean_in_onk_or_onk/>
+[4] <https://stackoverflow.com/questions/27301287/what-is-the-difference-between-onk-and-onk-in-time-complexity>
+[5] <https://www.cs.helsinki.fi/u/tpkarkka/opetus/12s/spa/lecture12.pdf>
+[6] <https://www.cuemath.com/n-choose-k-formula/>
+[7] <https://en.wikipedia.org/wiki/Combination>
 
 ---
-
 
 ## Introduction
 
@@ -127,8 +128,6 @@ Difference covers indirectly contribute to data compression algorithms:
 
 ---
 
-## Theoretical Computer Science
-
 In theoretical computer science, difference covers are studied for their combinatorial properties:
 
 1. They are used in developing and analyzing algorithms for various string-related problems.
@@ -139,13 +138,4 @@ By enabling more efficient algorithms for fundamental string processing tasks, (
 
 ---
 
-## Citations:
-
-[1] https://www.sciencedirect.com/science/article/abs/pii/S0020025511000910
-[2] https://stackoverflow.com/questions/27301287/what-is-the-difference-between-onk-and-onk-in-time-complexity
-[3] https://www.cs.helsinki.fi/u/tpkarkka/opetus/12s/spa/lecture12.pdf
-[4] https://en.wikipedia.org/wiki/Binomial_coefficient
-[5] https://en.wikipedia.org/wiki/Combination
-[6] https://www.ibm.com/topics/knn
-[7] https://www.geeksforgeeks.org/k-nearest-neighbours/
-[8] https://www.reddit.com/r/computerscience/comments/qtet0i/what_does_k_mean_in_onk_or_onk/
+## Theoretical Computer Science

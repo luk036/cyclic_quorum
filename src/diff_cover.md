@@ -31,6 +31,7 @@ The mathematical condition for a difference cover is:
 $$\forall k \in \mathbb{Z}_N, \exists s_i, s_j \in S \quad \text{such that} \quad k \equiv s_i - s_j \mod N$$
 
 These structures have applications in:
+
 - **Coding theory**: Error-correcting codes
 - **Cryptography**: Pseudorandom number generation
 - **Signal processing**: Efficient sampling patterns
@@ -80,6 +81,7 @@ if (count >= N1 + t * t_1 / 2) {
 ```
 
 Where:
+
 - $N2 = \lfloor N/2 \rfloor$
 - $D1 = D - 1$
 - $t$ = current recursion depth
@@ -229,7 +231,7 @@ void InitParallel(int N, int D) {
 
 For input $N=7, D=3$:
 
-```
+```text
 Number of workers: 6
   3
   2
@@ -261,6 +263,7 @@ The search space grows combinatorially with $N$ and $D$. The theoretical number 
 $$\binom{N}{D} = \frac{N!}{D!(N-D)!}$$
 
 However, the algorithm reduces complexity through:
+
 1. **Symmetry Breaking**: Reduces search space by $\approx N$
 2. **Pruning**: Eliminates non-viable branches early
 3. **Parallelization**: Divides work across $O(N)$ starting points
@@ -314,6 +317,7 @@ The algorithm extends to polynomial rings $\mathbb{F}_q[x]/(x^N-1)$ where differ
 ### 9.1 Isomorphism Rejection
 
 Advanced symmetry handling using:
+
 ```c++
 int min = 1;
 if (next == N) {
@@ -327,6 +331,7 @@ This ensures only canonical representatives are output.
 ### 9.2 Memory-Efficient Difference Tracking
 
 Instead of a full differences array, we could use a bitset for constant-time operations:
+
 ```c++
 std::bitset<MAX_C> diff_bitset;
 // ...
@@ -339,6 +344,7 @@ if (!diff_bitset.test(diff)) {
 ### 9.3 GPU Acceleration
 
 The parallelizable nature makes the algorithm suitable for GPU implementation:
+
 ```mermaid
 graph TB
     A[Host CPU] --> B[Copy N,D to GPU]
@@ -358,17 +364,20 @@ graph TB
 ## 10. Conclusion
 
 The provided C++ program implements an efficient, parallel algorithm for generating difference covers using:
+
 1. Recursive backtracking with aggressive pruning
 2. Modular difference tracking
 3. Parallel processing via thread pools
 4. Mathematical optimizations based on combinatorial constraints
 
 Difference covers bridge abstract mathematics and practical computing. Their generation requires sophisticated algorithms that balance:
+
 - Computational complexity management
 - Parallel efficiency
 - Mathematical correctness
 
 Future enhancements could include:
+
 - GPU acceleration for large $N$
 - Cloud-based distributed computation
 - Machine learning-guided search heuristics
@@ -378,7 +387,7 @@ The elegant interplay between mathematics and computation in this implementation
 
 ## Appendix: Complete Algorithm Pseudocode
 
-```
+```text
 procedure MAIN(argc, argv):
     if argc ≠ 3: usage()
     N = atoi(argv[1]), D = atoi(argv[2])
