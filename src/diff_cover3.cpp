@@ -55,9 +55,9 @@ When a complete sequence of D numbers is built, the `PrintD` function performs f
 
 #include "ThreadPool.h"
 
-static constexpr int MAX_N = 256;
-static constexpr int MAX_C = 128;
-static constexpr int MAX_D = 20;
+static constexpr int MAX_D = 16;   // Maximum density for the problem
+static constexpr int MAX_N = MAX_D * (MAX_D - 1) + 1;
+static constexpr int MAX_C = MAX_N / 2 + 1;
 
 class DcGenerator {
   private:
@@ -68,11 +68,11 @@ class DcGenerator {
     const int N2;
     const int N1;
 
-    int a[MAX_D];
+    int a[MAX_D + 1];  // [+1 for sentinel a[D]]
     int q[MAX_N];
     // int s[MAX_N];
 
-    int differences[MAX_C];
+    int8_t differences[MAX_C];
     // int count;
 
   public:
@@ -266,9 +266,9 @@ class DcGenerator {
 };
 
 void InitParallel(int N, int D) {
-    const unsigned num_workers = std::thread::hardware_concurrency();
+    const unsigned int num_workers = std::max(1u, std::thread::hardware_concurrency() * 3 / 4);
     ThreadPool pool(num_workers);
-    printf("Number of workers: %u\n", num_workers / 2);
+    printf("Number of workers: %u\n", num_workers);
 
     std::vector<std::future<void>> results;
     results.reserve((N + 1) / 2 - (N - 1) / D);  // Pre-allocate space

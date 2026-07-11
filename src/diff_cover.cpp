@@ -57,8 +57,9 @@ To speed up the computation, the program uses parallel processing through a thre
 #include "ThreadPool.h"
 
 // Maximum constants for array sizes
-static constexpr int MAX_C = 128;  // Maximum number of distinct differences
-static constexpr int MAX_D = 20;   // Maximum density for the problem
+static constexpr int MAX_D = 16;   // Maximum density for the problem
+static constexpr int MAX_N = MAX_D * (MAX_D - 1) + 1;
+static constexpr int MAX_C = MAX_N / 2 + 1;
 
 class DcGenerator {
   private:
@@ -69,9 +70,9 @@ class DcGenerator {
     const int N2; // N / 2
     const int N1; // N2 - D*D1/2 (threshold for valid configurations)
 
-    int a[MAX_D];  // Array to store current configuration
-    int b[MAX_D];  // Array to store auxiliary information
-    int differences[MAX_C];  // Array to track differences between elements
+    int a[MAX_D + 1];  // Array to store current configuration [+1 for sentinel a[D]]
+    int b[MAX_D + 1];  // Array to store auxiliary information
+    int8_t differences[MAX_C];  // Array to track difference counts (max count = D ≤ 20)
     // int count;  // Commented out count variable
 
   public:
@@ -213,9 +214,10 @@ class DcGenerator {
 
 // Initialize parallel computation with thread pool
 void InitParallel(int N, int D) {
-    const unsigned num_workers = std::thread::hardware_concurrency();
+    // Use physical cores for CPU-bound backtracking (avoid HT oversubscription)
+    const unsigned num_workers = std::max(1u, std::thread::hardware_concurrency() * 3 / 4);
     ThreadPool pool(num_workers);
-    printf("Number of workers: %u\n", num_workers / 2);
+    printf("Number of workers: %u\n", num_workers);
 
     std::vector<std::future<void>> results;
     results.reserve((N + 1) / 2 - (N - 1) / D);  // Pre-allocate space
