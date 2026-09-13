@@ -86,8 +86,19 @@ constexpr int HIDDEN_SIZE1 = 256;  // Number of neurons in first hidden layer
 constexpr int HIDDEN_SIZE2 = 128;  // Number of neurons in second hidden layer
 constexpr float LEARNING_RATE = 0.01;  // Learning rate for gradient descent
 constexpr float GAMMA = 0.98;  // Discount factor for future rewards
+constexpr float ENTROPY_BETA = 0.01f;  // Entropy bonus weight to preserve exploration
+constexpr int MAX_N = 1000000;  // Upper bound on N (keeps int size arithmetic safe)
 constexpr int MAX_EPISODES = 1000000000;  // Maximum training episodes
 constexpr int NUM_THREADS = 10;  // Number of threads to use for parallel training
+
+// Intermediate activations captured during a forward pass, needed for backpropagation
+struct ForwardResult {
+    std::vector<float> z1_pre;  // Pre-activation of first hidden layer
+    std::vector<float> z1;      // Post-ReLU activation of first hidden layer
+    std::vector<float> z2_pre;  // Pre-activation of second hidden layer
+    std::vector<float> z2;      // Post-ReLU activation of second hidden layer
+    std::vector<float> z3;      // Output logits
+};
 
 // Policy Network class implements a neural network for reinforcement learning
 class PolicyNetwork {
@@ -96,7 +107,6 @@ private:
     int outputSize;  // Size of output layer (N for difference cover problem)
     std::vector<std::vector<float>> W1, W2, W3;  // Weight matrices for 3 layers
     std::vector<float> b1, b2, b3;  // Bias vectors for 3 layers
-    std::mutex networkMutex;  // Mutex for thread-safe network updates
 
 public:
     // Constructor initializes network with given input and output sizes
@@ -140,48 +150,117 @@ public:
         }
     }
 
-    // Forward pass through the network with ReLU activation for hidden layers
-    std::vector<float> forward(const std::vector<float>& input) {
+    // Forward pass through the network with ReLU activation for hidden layers.
+    // Fills a caller-supplied buffer so it can be reused across episodes.
+    void forward(const std::vector<float>& input, ForwardResult& fr) const {
         // First hidden layer computation with ReLU activation
-        std::vector<float> z1(HIDDEN_SIZE1, 0.0f);
+        fr.z1_pre.resize(HIDDEN_SIZE1);
+        fr.z1.resize(HIDDEN_SIZE1);
         for (int row = 0; row < HIDDEN_SIZE1; ++row) {
+            float sum = b1[row];
             for (int col = 0; col < inputSize; ++col) {
-                z1[row] += W1[row][col] * input[col];
+                sum += W1[row][col] * input[col];
             }
-            z1[row] += b1[row];
-            z1[row] = std::max(0.0f, z1[row]);  // ReLU activation
+            fr.z1_pre[row] = sum;
+            fr.z1[row] = std::max(0.0f, sum);  // ReLU activation
         }
 
         // Second hidden layer computation with ReLU activation
-        std::vector<float> z2(HIDDEN_SIZE2, 0.0f);
+        fr.z2_pre.resize(HIDDEN_SIZE2);
+        fr.z2.resize(HIDDEN_SIZE2);
         for (int row = 0; row < HIDDEN_SIZE2; ++row) {
+            float sum = b2[row];
             for (int col = 0; col < HIDDEN_SIZE1; ++col) {
-                z2[row] += W2[row][col] * z1[col];
+                sum += W2[row][col] * fr.z1[col];
             }
-            z2[row] += b2[row];
-            z2[row] = std::max(0.0f, z2[row]);  // ReLU activation
+            fr.z2_pre[row] = sum;
+            fr.z2[row] = std::max(0.0f, sum);  // ReLU activation
         }
 
         // Output layer computation (no activation function - returns logits)
-        std::vector<float> z3(outputSize, 0.0f);
+        fr.z3.resize(outputSize);
         for (int row = 0; row < outputSize; ++row) {
+            float sum = b3[row];
             for (int col = 0; col < HIDDEN_SIZE2; ++col) {
-                z3[row] += W3[row][col] * z2[col];
+                sum += W3[row][col] * fr.z2[col];
             }
-            z3[row] += b3[row];
+            fr.z3[row] = sum;
         }
-        return std::move(z3);
     }
 
-    // Update network weights using gradients (thread-safe operation)
+    // Backpropagates the REINFORCE policy gradient for a single step and
+    // accumulates the parameter gradients. We maximise the expected return plus
+    // an entropy bonus, so
+    //   dL/dlogit_i = return * (probs_i - indicator_i)
+    //               + ENTROPY_BETA * probs_i * (log probs_i + entropy),
+    // where L is the loss that update() descends.
+    void backward(const ForwardResult& fr, const std::vector<float>& input,
+                  const std::vector<float>& probs, int action, float return_val,
+                  std::vector<std::vector<float>>& gradW1, std::vector<float>& gradB1,
+                  std::vector<std::vector<float>>& gradW2, std::vector<float>& gradB2,
+                  std::vector<std::vector<float>>& gradW3, std::vector<float>& gradB3) const {
+        float entropy = 0.0f;
+        for (int idx = 0; idx < outputSize; ++idx) {
+            entropy -= probs[idx] * std::log(probs[idx] + 1e-10f);
+        }
+
+        std::vector<float> gradLogits(outputSize, 0.0f);
+        for (int idx = 0; idx < outputSize; ++idx) {
+            float indicator = (idx == action) ? 1.0f : 0.0f;
+            gradLogits[idx] = return_val * (probs[idx] - indicator)
+                            + ENTROPY_BETA * probs[idx] * (std::log(probs[idx] + 1e-10f) + entropy);
+        }
+
+        for (int row = 0; row < outputSize; ++row) {
+            for (int col = 0; col < HIDDEN_SIZE2; ++col) {
+                gradW3[row][col] += gradLogits[row] * fr.z2[col];
+            }
+            gradB3[row] += gradLogits[row];
+        }
+
+        std::vector<float> dz2(HIDDEN_SIZE2, 0.0f);
+        for (int col = 0; col < HIDDEN_SIZE2; ++col) {
+            float sum = 0.0f;
+            for (int row = 0; row < outputSize; ++row) {
+                sum += W3[row][col] * gradLogits[row];
+            }
+            dz2[col] = fr.z2_pre[col] > 0.0f ? sum : 0.0f;  // ReLU derivative
+        }
+        for (int row = 0; row < HIDDEN_SIZE2; ++row) {
+            for (int col = 0; col < HIDDEN_SIZE1; ++col) {
+                gradW2[row][col] += dz2[row] * fr.z1[col];
+            }
+            gradB2[row] += dz2[row];
+        }
+
+        std::vector<float> dz1(HIDDEN_SIZE1, 0.0f);
+        for (int col = 0; col < HIDDEN_SIZE1; ++col) {
+            float sum = 0.0f;
+            for (int row = 0; row < HIDDEN_SIZE2; ++row) {
+                sum += W2[row][col] * dz2[row];
+            }
+            dz1[col] = fr.z1_pre[col] > 0.0f ? sum : 0.0f;  // ReLU derivative
+        }
+        for (int row = 0; row < HIDDEN_SIZE1; ++row) {
+            for (int col = 0; col < inputSize; ++col) {
+                gradW1[row][col] += dz1[row] * input[col];
+            }
+            gradB1[row] += dz1[row];
+        }
+    }
+
+    // Update network weights using gradients. Lock-free (Hogwild-style async SGD).
+    // This is an intentional unsynchronised read-modify-write: concurrent updates
+    // and forward() reads form a C++ data race (formally UB). It relies on
+    // naturally-aligned 4-byte float accesses being tear-free on the target
+    // (x86-64/AArch64); lost updates are the intended noise, and it scales far
+    // better than serialising every update behind a mutex.
     void update(const std::vector<std::vector<float>>& gradW1,
                const std::vector<float>& gradB1,
                const std::vector<std::vector<float>>& gradW2,
                const std::vector<float>& gradB2,
                const std::vector<std::vector<float>>& gradW3,
                const std::vector<float>& gradB3) {
-        std::lock_guard<std::mutex> lock(networkMutex);  // Thread-safe update
-
         // Update first layer weights and biases
         for (int row = 0; row < HIDDEN_SIZE1; ++row) {
             for (int col = 0; col < inputSize; ++col) {
@@ -206,9 +285,9 @@ public:
     }
 };
 
-// Softmax function converts logits to probability distribution
-std::vector<float> softmax(const std::vector<float>& logits) {
-    std::vector<float> probs(logits.size());
+// Softmax function converts logits to probability distribution.
+// Writes into the caller-supplied buffer so it can be reused across episodes.
+void softmax(const std::vector<float>& logits, std::vector<float>& probs) {
     float maxLogit = *std::max_element(logits.begin(), logits.end());  // For numerical stability
     float sumExp = 0.0f;
     for (size_t idx = 0; idx < logits.size(); ++idx) {
@@ -218,7 +297,6 @@ std::vector<float> softmax(const std::vector<float>& logits) {
     for (size_t idx = 0; idx < probs.size(); ++idx) {
         probs[idx] /= sumExp;  // Normalize to get probabilities
     }
-    return std::move(probs);
 }
 
 // Worker thread function for parallel training
@@ -227,41 +305,58 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
                  std::mutex& outputMutex) {
     std::mt19937 gen(std::random_device{}());  // Random number generator
 
+    const int T = D - 1;
+    const int IN = 2 * N;
+
+    // Per-thread buffers reused across episodes to avoid per-episode allocation
+    std::vector<int> chosen(N);    // Track chosen elements
+    std::vector<int> residues(N);  // Track covered residues
+    std::vector<std::vector<float>> states(T, std::vector<float>(IN));
+    std::vector<std::vector<float>> probsList(T, std::vector<float>(N));
+    std::vector<ForwardResult> fwdList(T);
+    std::vector<int> actions(T);
+    std::vector<float> rewards(T);
+    std::vector<float> returns(T);
+
+    std::vector<std::vector<float>> gradW1(HIDDEN_SIZE1, std::vector<float>(IN, 0.0f));
+    std::vector<float> gradB1(HIDDEN_SIZE1, 0.0f);
+    std::vector<std::vector<float>> gradW2(HIDDEN_SIZE2, std::vector<float>(HIDDEN_SIZE1, 0.0f));
+    std::vector<float> gradB2(HIDDEN_SIZE2, 0.0f);
+    std::vector<std::vector<float>> gradW3(N, std::vector<float>(HIDDEN_SIZE2, 0.0f));
+    std::vector<float> gradB3(N, 0.0f);
+
     // Main training loop for each thread
     while (!solutionFound && episodeCounter < MAX_EPISODES) {
         int episode = episodeCounter++;
         if (episode >= MAX_EPISODES) break;
 
         // Initialize problem state for difference cover
-        std::vector<int> chosen(N, 0);  // Track chosen elements
+        std::fill(chosen.begin(), chosen.end(), 0);
         chosen[0] = 1;  // Start with first element chosen
-        std::vector<int> residues(N, 0);  // Track covered residues
+        std::fill(residues.begin(), residues.end(), 0);
         residues[0] = 1;  // 0 is always covered
 
-        // Store episode data for training
-        std::vector<std::vector<float>> states;
-        std::vector<int> actions;
-        std::vector<float> rewards;
-
         // Generate episode by interacting with environment
-        for (int step = 0; step < D - 1; ++step) {
+        for (int step = 0; step < T; ++step) {
             // Create state representation: concatenation of chosen and residues
-            std::vector<float> state(2 * N, 0.0f);
+            std::vector<float>& state = states[step];
             for (int idx = 0; idx < N; ++idx) {
                 state[idx] = static_cast<float>(chosen[idx]);
                 state[N + idx] = static_cast<float>(residues[idx]);
             }
 
             // Get action probabilities from policy network
-            std::vector<float> logits = policyNet.forward(state);
+            ForwardResult& fr = fwdList[step];
+            policyNet.forward(state, fr);
 
             // Mask already chosen elements by setting their logits to very low value
             for (int idx = 0; idx < N; ++idx) {
-                if (chosen[idx]) logits[idx] = -1e9;
+                if (chosen[idx]) fr.z3[idx] = -1e9f;
             }
 
             // Sample action from probability distribution
-            std::vector<float> probs = softmax(logits);
+            std::vector<float>& probs = probsList[step];
+            softmax(fr.z3, probs);
             std::discrete_distribution<int> dist(probs.begin(), probs.end());
             int action = dist(gen);
 
@@ -285,9 +380,8 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
             }
 
             // Store experience for training
-            states.push_back(std::move(state));
-            actions.push_back(std::move(action));
-            rewards.push_back(static_cast<float>(newCovered));  // Reward is number of newly covered residues
+            actions[step] = action;
+            rewards[step] = static_cast<float>(newCovered);  // Reward is number of newly covered residues
         }
 
         // Check if current solution covers all residues
@@ -312,40 +406,32 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
         }
 
         // Calculate discounted returns for each step
-        std::vector<float> returns(rewards.size());
         float G = 0.0;
-        for (int t = rewards.size() - 1; t >= 0; --t) {
+        for (int t = T - 1; t >= 0; --t) {
             G = GAMMA * G + rewards[t];  // Discounted return
             returns[t] = G;
         }
 
         // Normalize returns for more stable training
         float mean = 0.0f, stddev = 0.0f;
-        for (float ret : returns) mean += ret;
-        mean /= returns.size();
-        for (float ret : returns) stddev += (ret - mean) * (ret - mean);
-        stddev = std::sqrt(stddev / returns.size());
+        for (int t = 0; t < T; ++t) mean += returns[t];
+        mean /= T;
+        for (int t = 0; t < T; ++t) stddev += (returns[t] - mean) * (returns[t] - mean);
+        stddev = std::sqrt(stddev / T);
         if (stddev < 1e-5) stddev = 1.0f;  // Avoid division by zero
-        for (float& ret : returns) ret = (ret - mean) / stddev;  // Standardize returns
+        for (int t = 0; t < T; ++t) returns[t] = (returns[t] - mean) / stddev;  // Standardize returns
 
-        // Initialize gradients for all weights and biases
-        std::vector<std::vector<float>> gradW1(HIDDEN_SIZE1, std::vector<float>(2 * N, 0.0f));
-        std::vector<float> gradB1(HIDDEN_SIZE1, 0.0f);
-        std::vector<std::vector<float>> gradW2(HIDDEN_SIZE2, std::vector<float>(HIDDEN_SIZE1, 0.0f));
-        std::vector<float> gradB2(HIDDEN_SIZE2, 0.0f);
-        std::vector<std::vector<float>> gradW3(N, std::vector<float>(HIDDEN_SIZE2, 0.0f));
-        std::vector<float> gradB3(N, 0.0f);
+        for (auto& row : gradW1) std::fill(row.begin(), row.end(), 0.0f);
+        std::fill(gradB1.begin(), gradB1.end(), 0.0f);
+        for (auto& row : gradW2) std::fill(row.begin(), row.end(), 0.0f);
+        std::fill(gradB2.begin(), gradB2.end(), 0.0f);
+        for (auto& row : gradW3) std::fill(row.begin(), row.end(), 0.0f);
+        std::fill(gradB3.begin(), gradB3.end(), 0.0f);
 
         // Calculate gradients for each time step (policy gradient theorem)
-        for (size_t t = 0; t < states.size(); ++t) {
-            std::vector<float> logits = policyNet.forward(states[t]);
-            std::vector<float> probs = softmax(logits);
-
-            std::vector<float> gradLogits(N, 0.0f);
-            for (int idx = 0; idx < N; ++idx) {
-                float indicator = (idx == actions[t]) ? 1.0f : 0.0f;
-                gradLogits[idx] = returns[t] * (indicator - probs[idx]);  // Policy gradient
-            }
+        for (int t = 0; t < T; ++t) {
+            policyNet.backward(fwdList[t], states[t], probsList[t], actions[t], returns[t],
+                               gradW1, gradB1, gradW2, gradB2, gradW3, gradB3);
         }
 
         // Update network weights with calculated gradients
@@ -393,8 +479,10 @@ int main(int argc, const char* argv[]) {
     int N = atoi(argv[1]);  // Size of the set
     int D = atoi(argv[2]);  // Size of the difference cover
 
-    // Validate parameters
-    if (N < 3 || D < 3 || N > D * (D - 1) + 1) {
+    // Validate parameters. Bound D and N before the product so allocation-size
+    // arithmetic cannot overflow int, and the product itself cannot overflow.
+    if (N < 3 || D < 3 || D > N || N > MAX_N ||
+        static_cast<long long>(N) > static_cast<long long>(D) * (D - 1) + 1) {
         printf("Invalid parameters: n>=3, d>=3, n<=d*(d-1)+1\n");
         return 1;
     }

@@ -37,13 +37,13 @@ g++ -std=c++11 -pthread -O3 -o rl_cover src/RL_mt.cpp
 ## Key constraints
 
 - `N ≥ 3`, `D ≥ 3`, and **`N ≤ D*(D-1)+1`** — enforced at startup in every solver
-- `MAX_D = 20` in search algorithms (hard-coded array size)
-- `MAX_C = 128` for difference tracking arrays (`diff_cover.cpp`)
+- `MAX_D = 16` in `diff_cover.cpp` (hard-coded array size); `D ≤ MAX_D` is validated so `D ≤ 16` and `N ≤ MAX_N = 241`
+- `MAX_C = MAX_N / 2 + 1 = 121` for difference tracking arrays (`diff_cover.cpp`)
 
 ## Architecture notes
 
-- **diff_cover.cpp**: Recursive backtracking in `GenD()`, prunes when `count < N1 + t*(t+1)/2`. Range of starting values `[(N-1)/D + 1, (N+1)/2]` mapped to thread pool workers.
-- **RL_mt.cpp**: Policy network `2N → 256 → 128 → N`, Xavier init, `γ=0.98`, `lr=0.01`, `MAX_EPISODES=1e9`. Shared network mutex-protected. RL always fixes element 0 first.
+- **diff_cover.cpp**: Recursive backtracking in `BraceFD()`, prunes when `count < N1 + t*(t+1)/2`. Range of starting values `[(N-1)/D + 1, (N+1)/2]` mapped to thread pool workers.
+- **RL_mt.cpp**: Policy network `2N → 256 → 128 → N`, Xavier init, `γ=0.98`, `lr=0.01`, entropy bonus `β=0.01`, `MAX_EPISODES=1e9`. Weight updates are lock-free (Hogwild async SGD, no network mutex — see the comment on `update()`); only solution output is mutex-protected. RL always fixes element 0 first.
 - Symmetry breaking in search uses bracelet generation (Joe Sawada's algorithm). C files (`bracelets.c`, `necklace.c`) are the reference implementations; C++ files are ports.
 
 ## Code style

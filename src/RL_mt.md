@@ -149,7 +149,7 @@ The program spawns `NUM_THREADS` worker threads (default=10) that:
 
 1. Share the policy network
 2. Independently generate episodes
-3. Synchronously update network weights
+3. Asynchronously update network weights (lock-free Hogwild)
 
 ```mermaid
 sequenceDiagram
@@ -168,7 +168,7 @@ sequenceDiagram
 
 ### 5.2 Synchronization Challenges
 
-- **Weight Updates**: Protected by mutex to prevent race conditions
+- **Weight Updates**: Lock-free (Hogwild async SGD) — worker threads update the shared network without a mutex; concurrent read-modify-writes are intentional and only the solution output is mutex-protected
 - **Solution Notification**: Atomic boolean flag for early termination
 - **Episode Counting**: Atomic integer for progress tracking
 

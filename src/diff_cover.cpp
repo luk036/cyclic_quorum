@@ -71,9 +71,8 @@ class DcGenerator {
     const int N1; // N2 - D*D1/2 (threshold for valid configurations)
 
     int a[MAX_D + 1];  // Array to store current configuration [+1 for sentinel a[D]]
-    int b[MAX_D + 1];  // Array to store auxiliary information
+    int q[MAX_N];      // Marker of which values are currently used in the configuration
     int8_t differences[MAX_C];  // Array to track difference counts (max count = D ≤ 20)
-    // int count;  // Commented out count variable
 
   public:
     // Constructor initializes the generator with parameters n, d, and starting value j
@@ -81,14 +80,24 @@ class DcGenerator {
         : N(n), D(d), ND(N - D), N2(N / 2), D1(D - 1), N1(N2 - D * D1 / 2) {
         // Initialize arrays to zero
         std::memset(a, 0, sizeof(a));
-        std::memset(b, 0, sizeof(b));
+        std::memset(q, 0, sizeof(q));
         std::memset(differences, 0, sizeof(differences));
 
         a[D] = N;  // Sentinel value for printing
         a[0] = 0;  // Base value for computations
         a[1] = j;  // Starting value
-        b[1] = 1;   // Initial auxiliary value
+        q[j] = 1;  // Mark the starting value as used
         differences[0] = 1;  // Difference of 0 is always present
+    }
+
+    // Breaks bracelet (reflection) symmetry by comparing the current prefix with
+    // its reverse: 1 if the prefix is smaller, -1 if the reverse is smaller, 0 if equal.
+    int CheckRev(int t_1) {
+        for (int idx = a[1]; idx <= t_1 / 2; ++idx) {
+            if (q[idx] < q[t_1 - idx]) return 1;
+            if (q[idx] > q[t_1 - idx]) return -1;
+        }
+        return 0;
     }
 
     // Updates the difference counts when moving forward in the generation
@@ -133,7 +142,7 @@ class DcGenerator {
         /* Determine last bit */
         int min = 1;
         if (next == N) {
-            min = Dp != 0 ? b[Dp] + 1 : b[p];
+            min = Dp != 0 ? q[a[Dp]] + 1 : q[a[p]];
         }
 
         if (min != 1) return;  // Skip if not minimal
@@ -151,13 +160,14 @@ class DcGenerator {
         step_backward(D1);
     }
 
-    // Recursive generation function for the configurations
-    void GenD(int t, int p, int count) {
+    // Recursive generation function with bracelet (reflection) symmetry breaking
+    void BraceFD(int t, int p, int r1, int count) {
         if (t >= D1) {  // Base case: reached depth D-1
             PrintD(p, count);
             return;
         }
 
+        const int at = a[t];
         const int t_1 = t + 1;
         step_forward(t, count);  // Update differences for current position
 
@@ -168,44 +178,67 @@ class DcGenerator {
 
             // Try the maximum possible value first
             if (max <= tail) {
+                int r2 = r1;
                 a[t_1] = max;
-                b[t_1] = b[t_1 - p];
-                GenD(t_1, p, count);
+                q[max] = q[a[t_1 - p]];
+                if (a[1] == max - at) {
+                    int rev = CheckRev(max);
+                    if (rev == 0) {
+                        r2 = max;
+                    }
+                    if (rev != -1) {
+                        BraceFD(t_1, p, r2, count);
+                    }
+                } else {
+                    BraceFD(t_1, p, r1, count);
+                }
+                q[max] = 0;
                 tail = max - 1;
             }
 
             // Try all other possible values in descending order
-            for (int idx = tail; idx >= a[t] + 1; --idx) {
+            for (int idx = tail; idx >= at + 1; --idx) {
                 a[t_1] = idx;
-                b[t_1] = 1;
-                GenD(t_1, t_1, count);
+                q[idx] = 1;
+                BraceFD(t_1, t_1, r1, count);
+                q[idx] = 0;
             }
         }
         step_backward(t);  // Backtrack the difference counts
     }
 
     // Initial generation function that starts the process
-    void Gen11() {
+    void BraceFD11() {
+        const int a1 = a[1];
+        const int r1 = a1;
+
         int count = 0;
         step_forward(1, count);  // Initialize with first element
         int tail = ND + 2;
-        const int max = a[1] + a[1];
+        const int max = a1 + a1;
 
         // Try the maximum possible value first
         if (max <= tail) {
+            int r2 = r1;
             a[2] = max;
-            b[2] = b[1];
-            GenD(2, 1, count);
+            q[max] = q[a1];
+            if (a1 == max - a1) {
+                r2 = max;
+                BraceFD(2, 1, r2, count);
+            } else {
+                BraceFD(2, 1, r1, count);
+            }
+            q[max] = 0;
             tail = max - 1;
         }
 
         // Try all other possible values in descending order
-        for (int idx = tail; idx >= a[1] + 1; --idx) {
+        for (int idx = tail; idx >= a1 + 1; --idx) {
             a[2] = idx;
-            b[2] = 1;
-            GenD(2, 2, count);
+            q[idx] = 1;
+            BraceFD(2, 2, r1, count);
+            q[idx] = 0;
         }
-        // step_backward(1);
     }
 
     // Display usage information
@@ -229,7 +262,7 @@ void InitParallel(int N, int D) {
     for (int idx = start; idx >= end; --idx) {
         results.emplace_back(pool.enqueue([N, D, idx]() {
             DcGenerator generator(N, D, idx);
-            generator.Gen11();
+            generator.BraceFD11();
         }));
     }
     int countdown = start - end;
@@ -250,8 +283,11 @@ int main(int argc, const char *argv[]) {
     int N = atoi(argv[1]);
     int D = atoi(argv[2]);
 
-    // Validate input parameters
-    if (N < 3 || D < 3 || N > D * (D - 1) + 1) {
+    // Validate input parameters. D and N are bounded before the product so the
+    // fixed-size arrays in DcGenerator (a[MAX_D+1], q[MAX_N], differences[MAX_C])
+    // are never indexed out of range, and the product cannot overflow.
+    if (N < 3 || D < 3 || D > MAX_D || N > MAX_N ||
+        static_cast<long long>(N) > static_cast<long long>(D) * (D - 1) + 1) {
         DcGenerator::usage();
         return 1;
     }

@@ -25,6 +25,7 @@ constexpr float GAMMA = 0.98f;
 constexpr int MAX_EPISODES = 1000000000;
 constexpr int NUM_THREADS = 10;
 constexpr float ENTROPY_BETA = 0.01f;
+constexpr int MAX_N = 1000000;  // Upper bound on N (keeps int size arithmetic safe)
 constexpr int LOCAL_UPDATE_INTERVAL = 5;
 
 struct ForwardResult {
@@ -138,7 +139,7 @@ public:
         for (int i = 0; i < T; ++i) {
             float delta = (i == action) ? 1.0f : 0.0f;
             gradLogits[i] = return_val * (probs[i] - delta)
-                          - entropy_beta * probs[i] * (std::log(probs[i] + 1e-10f) + entropy);
+                          + entropy_beta * probs[i] * (std::log(probs[i] + 1e-10f) + entropy);
         }
 
         for (int r = 0; r < OUT; ++r) {
@@ -379,7 +380,10 @@ int main(int argc, const char* argv[]) {
     int N = atoi(argv[1]);
     int D = atoi(argv[2]);
 
-    if (N < 3 || D < 3 || N > D * (D - 1) + 1) {
+    // Bound D and N before the product so allocation-size arithmetic cannot
+    // overflow int, and the product itself cannot overflow.
+    if (N < 3 || D < 3 || D > N || N > MAX_N ||
+        static_cast<long long>(N) > static_cast<long long>(D) * (D - 1) + 1) {
         printf("Invalid parameters: n>=3, d>=3, n<=d*(d-1)+1\n");
         return 1;
     }
