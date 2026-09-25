@@ -1,0 +1,12 @@
+---
+fontsize: 10pt
+institute: Fudan University
+date: \today
+link-citations: true
+colorlinks: true
+header-includes:
+  # Place figures at the top or bottom of a page (no inline, no float-only pages).
+  - '\makeatletter'
+  - '\def\fps@figure{tb}'
+  - '\makeatother'
+  - '\AtBeginDocument{\emergencystretch=6em}'
