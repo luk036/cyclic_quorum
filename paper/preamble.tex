@@ -1,0 +1,18 @@
+% -*- coding: utf-8 -*-
+\usepackage{fontspec}
+\directlua{luaotfload.add_fallback("emojifb", {"Segoe UI Emoji:mode=harf"})}
+\setsansfont{Latin Modern Sans}[RawFeature={fallback=emojifb}]
+\setmainfont{Latin Modern Roman}[RawFeature={fallback=emojifb}]
+\setmonofont{Latin Modern Mono}[RawFeature={fallback=emojifb},Scale=0.86]
+
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\definecolor{nordred}{HTML}{BF616A}
+\definecolor{nordblue}{HTML}{5E81AC}
+\definecolor{nordgreen}{HTML}{A3BE8C}
+\definecolor{nordpurple}{HTML}{B48EAD}
+
+\usetheme{Frankfurt}
+\setbeamertemplate{navigation symbols}{}
+\setbeamercolor{structure}{fg=nordblue}
+\setbeamercolor{alerted text}{fg=nordred}
