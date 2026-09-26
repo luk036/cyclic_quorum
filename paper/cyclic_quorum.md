@@ -540,6 +540,29 @@ N & Base quorum \\
 \end{tabular}
 \end{table*}
 ```
+
+Table III compares the quorum size found with the lower bound.
+
+```{=latex}
+\begin{table*}[t]
+\centering
+\caption{Quorum size $d$ found by the search compared with the lower bound $\lceil\sqrt{N}\rceil$ for selected $N$. Rows with $N \le 150$ are optimal (recursive search); the rest are nearly optimal (reinforcement learning).}
+\begin{tabular}{rrrr}
+\hline
+$N$ & $d$ & $\lceil\sqrt{N}\rceil$ & $d/\lceil\sqrt{N}\rceil$ \\
+\hline
+112 & 12 & 11 & 1.09 \\
+120 & 13 & 11 & 1.18 \\
+130 & 13 & 12 & 1.08 \\
+140 & 14 & 12 & 1.17 \\
+150 & 14 & 13 & 1.08 \\
+160 & 17 & 13 & 1.31 \\
+171 & 17 & 14 & 1.21 \\
+\hline
+\end{tabular}
+\end{table*}
+```
+
 ### Common Elements and Key Differences
 
 Both the recursive search and the reinforcement learning approaches share a fundamental strategy for efficiency: they **utilize parallel processing**. Both employ worker threads (or a thread pool) to significantly speed up their respective processes, whether that's exploring different starting points in a search space or running multiple learning agents simultaneously.
