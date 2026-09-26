@@ -5,6 +5,7 @@ date: \today
 link-citations: true
 colorlinks: true
 header-includes:
+  - '\usepackage{algorithm,algpseudocode}'
   # Place figures at the top or bottom of a page (no inline, no float-only pages).
   - '\makeatletter'
   - '\def\fps@figure{tb}'
