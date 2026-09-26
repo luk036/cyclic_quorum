@@ -128,7 +128,7 @@ Cyclic quorum systems and difference covers are used well beyond mutual exclusio
 
 **Distributed mutual exclusion.** A site requests access from every member of its quorum; the members check for conflicts, and the site enters the critical section only when they agree. The quorum size approaches $\sqrt{N}$, and the cyclic construction provides symmetry while requiring only one base quorum.
 
-**Distributed all-pairs algorithms.** Each process stores only a quorum of the data, and the all-pairs property guarantees that every pair of data sets occurs together in some quorum. The quorum size grows as $O(\sqrt{N})$ in the number of processes $N$, which reduces memory substantially; reported experiments give up to a sevenfold speedup on eight nodes with a two-thirds reduction in memory [@kleinheksel2016scaling; @kleinheksel2018efficient].
+**Distributed all-pairs algorithms.** Each process stores only a quorum of the data, and the all-pairs property guarantees that every pair of data sets occurs together in some quorum. The quorum size grows as $O(\sqrt{N})$ in the number of processes $N$, which reduces memory substantially; reported experiments give up to a sevenfold speedup on eight nodes with a two-thirds reduction in memory [@kleinheksel2016scaling; @kleinheksel2018efficient; @bian2021efficient].
 
 **Wireless sensor networks.** A variant called CQS-Pair combines two cyclic quorum systems with different cycle lengths to satisfy a heterogeneous rotation-closure property, so that nodes with different power-saving requirements are guaranteed to discover one another within every $m$ consecutive slots. This balances energy consumption against discovery delay [@lai2010heterogenous].
 
