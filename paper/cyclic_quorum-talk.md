@@ -17,8 +17,8 @@
 
 ## Cyclic Quorum Systems
 
-- Fix a **base quorum** $B_0 = \{a_1, \dots, a_d\} \subseteq \{0, \dots, N-1\}$
-- Generate every quorum by a cyclic shift: $B_i = \{a_1+i, \dots, a_d+i\} \pmod N$
+- Fix a **base quorum** $B_0 = \{a_0, \dots, a_{d-1}\} \subseteq \{0, \dots, N-1\}$
+- Generate every quorum by a cyclic shift: $B_i = \{a_0+i, \dots, a_{d-1}+i\} \pmod N$
 - Equal work and equal responsibility then hold automatically
 - A CQS is thus described by a single base quorum
 
@@ -119,17 +119,17 @@
 
 ## The Policy Network
 
-- Input: the $2N$-dimensional state vector
-- Hidden layers use ReLU; the output gives logits over the $N$ numbers
-- Softmax turns the logits into a distribution; already chosen numbers are masked
-- Parameters are updated by a policy-gradient rule:
-  $$\text{parameter} \leftarrow \text{parameter} - \eta \times \text{gradient}$$
+- Input: the $2N$-dimensional state vector; hidden layers of size 256 and 128 with ReLU
+- Output: $N$ logits (Xavier initialisation); a masked softmax keeps chosen numbers out
+- Episode: $d-1$ sampled steps, then the last element is forced
+- Policy-gradient ascent with $\eta = 0.01$, $\gamma = 0.98$ and entropy bonus $\beta = 0.01$:
+  $$\theta \leftarrow \theta + \eta \sum_k G_k\, \nabla_\theta \log \pi_\theta(a_k \mid s_k)$$
 
 ## Parallel Reinforcement Learning
 
 - Several worker threads, each acting as an independent agent
 - They **share one policy network** and contribute their gradients
-- Mutexes protect the shared network and the output stream
+- The shared-network update is **lock-free** (Hogwild-style async SGD); only the output is mutex-protected
 - Learning stops once a solution is found or `MAX_EPISODES` is reached
 
 ## Comparison
@@ -154,6 +154,7 @@
 - **All-pairs property:** every pair of data sets occurs together in some quorum
 - The quorum size grows as $O(\sqrt{P})$ in the number of processes $P$
 - Reported: up to 7x speedup on 8 nodes with a 2/3 memory reduction
+- Bian and Somani enumerate **all** cyclic quorum sets with the all-pairs property
 
 ## Wireless Sensor Networks
 
@@ -161,6 +162,12 @@
 - **CQS-Pair** combines two cyclic quorum systems with different cycle lengths
 - It guarantees discovery within every $m$ consecutive slots
 - This balances energy consumption against discovery delay
+
+## Rendezvous and Neighbor Discovery
+
+- Quorum schedules let two radios **rendezvous without a dedicated control channel**
+- Used in cognitive-radio, Internet-of-Things, and underwater acoustic networks
+- Meeting is guaranteed within a bounded number of slots
 
 ## Deep Learning and String Algorithms
 
@@ -183,6 +190,20 @@
 - Optimal base quorums for $N = 112$ to $150$ (recursive search)
 - Nearly optimal base quorums for $N = 151$ to $171$ (RL)
 - The complete tables are given in the paper
+
+## Quorum Size vs. Lower Bound
+
+| $N$ | $d$ | $\lceil\sqrt{N}\rceil$ | $d/\lceil\sqrt{N}\rceil$ |
+|----:|----:|-----------------------:|-------------------------:|
+| 112 | 12 | 11 | 1.09 |
+| 120 | 13 | 11 | 1.18 |
+| 130 | 13 | 12 | 1.08 |
+| 140 | 14 | 12 | 1.17 |
+| 150 | 14 | 13 | 1.08 |
+| 160 | 17 | 13 | 1.31 |
+| 171 | 17 | 14 | 1.21 |
+
+- $N \le 150$: optimal (recursive search); $N > 150$: nearly optimal (RL)
 
 # Implementation and Performance
 
@@ -238,7 +259,8 @@
 
 ## Future Work
 
-- Extend the search to larger $N$
-- Improve the RL agent with reward shaping and larger networks
+- Extend the range of $N$ with more aggressive parallel search
+- Develop learned heuristics for pruning
+- Count fixed-density prenecklaces
 - Generate $k$-ary necklaces with fixed content for $k > 2$
 - List other restricted classes of bracelets
