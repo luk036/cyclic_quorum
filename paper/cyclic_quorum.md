@@ -158,6 +158,41 @@ The first approach is a **systematic algorithm** for finding difference covers, 
 Solutions are **built incrementally**, one number at a time. Whenever a number is added, the algorithm computes its differences with the numbers already chosen and updates the set of differences seen so far.
 
 ![Depth-first search for a difference cover with $N = 5$ and $d = 3$. A branch that cannot cover all differences is pruned (red); a complete branch is a solution (green).](fig-search-tree.svg){width="85%"}
+```{=latex}
+\begin{algorithm*}[t]
+\caption{Recursive search for a difference cover}
+\begin{algorithmic}[1]
+\Function{Search}{$N, d$}
+  \State $a[1] \gets 0$;\quad $\mathit{cnt} \gets 0$;\quad $\mathit{diff}[\cdot] \gets 0$;\quad $\mathit{diff}[0] \gets 1$
+  \State \Call{Recurse}{$1, 1$}
+\EndFunction
+\Function{Recurse}{$t, \mathit{cnt}$}
+  \If{$t = d$}
+    \State \Call{Report}{$a$};\quad \Return
+  \EndIf
+  \For{$v \gets a[t] + 1$ \textbf{to} $N - d + t + 1$}
+    \State $a[t+1] \gets v$
+    \State $\mathit{cnt}' \gets \Call{StepForward}{t+1, \mathit{cnt}}$
+    \If{$\mathit{cnt}' + \mathit{free}(t+1) \ge N-1$} \Comment{coverage bound: else prune}
+      \If{$\Call{CheckRev}{t+1} \ne -1$} \Comment{reflection symmetry}
+        \State \Call{Recurse}{$t+1, \mathit{cnt}'$}
+      \EndIf
+    \EndIf
+    \State \Call{StepBackward}{$t+1$}
+  \EndFor
+\EndFunction
+\Function{StepForward}{$t, \mathit{cnt}$}
+  \For{$j \gets 1$ \textbf{to} $t-1$}
+    \State $\delta \gets \min\bigl(a[t]-a[j],\ N-(a[t]-a[j])\bigr)$
+    \If{$\mathit{diff}[\delta] = 0$} \State $\mathit{cnt} \gets \mathit{cnt} + 1$ \EndIf
+    \State $\mathit{diff}[\delta] \gets \mathit{diff}[\delta] + 1$
+  \EndFor
+  \State \Return $\mathit{cnt}$
+\EndFunction
+\end{algorithmic}
+\end{algorithm*}
+```
+
 
 
 ### Generating Fixed-Density Necklaces and Bracelets Efficiently
@@ -443,6 +478,28 @@ As in the recursive search, the learning is accelerated with **multi-threading**
 The `workerThread` function encapsulates the logic for a single thread. Each thread runs a loop that continues as long as no solution has been found by any thread and the total episode count across all threads is below `MAX_EPISODES`. Inside the loop, a thread increments the shared episode counter, initializes the puzzle state, interacts with the "environment" (picks numbers) for D-1 steps, stores the states, actions, and rewards experienced during the episode. After the episode, it checks if a solution was found. If yes, it uses a **mutex (`outputMutex`)** to safely print the solution and set a shared `solutionFound` flag. If not a solution, it calculates discounted returns, normalizes them, computes the gradients for the network parameters based on the policy gradient method, and then uses a **mutex (`networkMutex`)** to safely update the shared PolicyNetwork with these gradients. The mutexes (`networkMutex` and `outputMutex`) are essential for thread safety, ensuring that shared resources (the neural network parameters and the output stream) are accessed and modified by only one thread at a time.
 
 ![The reinforcement-learning loop. The policy network selects the next element, the environment returns a reward, and the network is updated by policy gradient.](fig-rl-loop.svg){width="85%"}
+```{=latex}
+\begin{algorithm*}[t]
+\caption{Reinforcement-learning episode and policy-gradient update}
+\begin{algorithmic}[1]
+\Function{Episode}{$N, d, \pi_\theta$}
+  \State $s \gets [\mathbf{0}_N, \mathbf{0}_N]$;\quad store $s_0$
+  \For{$k \gets 1$ \textbf{to} $d-1$}
+    \State $z \gets \pi_\theta(s)$;\quad $p \gets \operatorname{softmax}(z)$ with chosen numbers masked
+    \State sample $a_k \sim p$
+    \State $r_k \gets$ number of new differences covered by $a_k$
+    \State update $s$ from $a_k$;\quad store $s_k, a_k, r_k$
+  \EndFor
+  \State \Return the trajectory $(\ldots, s_k, a_k, r_k, \ldots)$
+\EndFunction
+\Function{Update}{$\{r_k\}$}
+  \State $G_k \gets \sum_{i \ge k} \gamma^{\,i-k} r_i$;\quad normalise
+  \State $\theta \gets \theta + \eta \sum_k G_k\, \nabla_\theta \log \pi_\theta(a_k \mid s_k)$
+\EndFunction
+\end{algorithmic}
+\end{algorithm*}
+```
+
 
 
 The `findDifferenceCoverRL` function orchestrates the parallel RL process. It initializes the PolicyNetwork, creates shared atomic variables (`episodeCounter`, `solutionFound`) and the output mutex, launches the specified number of `NUM_THREADS` worker threads, and waits for them to finish using `join()`. Finally, it reports if no solution was found after exhausting the `MAX_EPISODES` limit.
