@@ -299,7 +299,7 @@ with learning rate $\eta$ and an entropy bonus of weight $\beta$ that discourage
 
 ### Parallel Agents
 
-As in the recursive search, learning is accelerated by **multi-threading**. Several worker threads run episodes concurrently and share a single policy network, each contributing its gradients to the shared parameters. The shared-network update is lock-free, in the manner of asynchronous (Hogwild-style) stochastic gradient descent, relying on tear-free aligned floating-point stores; only the solution output is protected by a mutex. Each worker continues until some thread finds a solution or the total episode count reaches the limit.
+As in the recursive search, learning is accelerated by **multi-threading**. Several worker threads run episodes concurrently and share a single policy network, each contributing its gradients to the shared parameters. To keep the hot loops free of synchronisation, every worker holds a private copy of the weights, refreshed from the shared copy once per gradient batch; the shared copy is read and written only while holding a mutex, and the solution output is protected by another. This keeps the asynchronous (Hogwild-style) character of the update---batches from different workers interleave in arbitrary order and updates can be lost---while keeping every memory access free of data races. Each worker continues until some thread finds a solution or the total episode count reaches the limit.
 
 ![The reinforcement-learning loop. The policy network selects the next element, the environment returns a reward, and the network is updated by policy gradient.](fig-rl-loop.svg){width="85%"}
 
@@ -390,7 +390,7 @@ Several implementation choices measurably affected performance; Table V summariz
 
 **Symmetry breaking.** Breaking rotation symmetry alone (necklaces) was extended with the reflection test `CheckRev` of the search to enumerate bracelets. The gain is modest, 1.07--1.17$\times$, because reflection only helps near the symmetric frontier; the output was verified to be identical to a reference solver on twelve parameter pairs with $N$ from 15 to 105.
 
-**Learning efficiency.** Caching the network activations during an episode instead of recomputing the forward pass during backpropagation, together with reusing per-thread buffers across episodes, gives a 1.48$\times$ single-thread speedup. Removing the lock around the shared-network update, in the style of asynchronous SGD, gives 9.5$\times$ on ten threads.
+**Learning efficiency.** Caching the network activations during an episode instead of recomputing the forward pass during backpropagation, together with reusing per-thread buffers across episodes, gives a 1.48$\times$ single-thread speedup. Running the ten worker threads on private weight copies, refreshed once per gradient batch, gives $14\times$ over a single-threaded build on a fixed budget of 20,000 episodes at $N=80$, $d=10$; the ratio exceeds the thread count because a single active core runs at a higher turbo frequency than ten. The private copies cost no measurable throughput: this workload runs within 2\% of an unsynchronised version on the same machine.
 
 **Robustness.** The input guard $N \le d(d-1)+1$ was originally evaluated in 32-bit arithmetic and overflowed for large $d$; evaluating it in 64-bit and bounding $N$ fixes this. The command-line interface was fuzzed with degenerate and overflow inputs, all of which are now rejected cleanly, and the binaries were rebuilt with standard-library bounds assertions enabled without observing any out-of-range access. Two transient defects in early development versions, a discarded logit gradient and an incorrect entropy-bonus sign, were corrected before the measurements above, and the corrected solver was validated against the reference solutions.
 
@@ -404,7 +404,7 @@ Change & Effect \\
 \hline
 Bracelet (reflection) symmetry & 1.07--1.17$\times$, identical output \\
 Activation caching and buffer reuse & 1.48$\times$ (single thread) \\
-Lock-free shared-network update & 9.5$\times$ (10 threads) \\
+Ten worker threads with private weight copies & 14$\times$ (10 threads) \\
 \hline
 \end{tabular}
 \end{table*}

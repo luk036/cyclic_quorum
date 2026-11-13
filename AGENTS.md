@@ -43,7 +43,7 @@ g++ -std=c++11 -pthread -O3 -o rl_cover src/RL_mt.cpp
 ## Architecture notes
 
 - **diff_cover.cpp**: Recursive backtracking in `BraceFD()`, prunes when `count < N1 + t*(t+1)/2`. Range of starting values `[(N-1)/D + 1, (N+1)/2]` mapped to thread pool workers.
-- **RL_mt.cpp**: Policy network `2N → 256 → 128 → N`, Xavier init, `γ=0.98`, `lr=0.01`, entropy bonus `β=0.01`, `MAX_EPISODES=1e9`. Weight updates are lock-free (Hogwild async SGD, no network mutex — see the comment on `update()`); only solution output is mutex-protected. RL always fixes element 0 first.
+- **RL_mt.cpp**: Policy network `2N → 256 → 128 → N`, Xavier init, `γ=0.98`, `lr=0.01`, entropy bonus `β=0.01`, `MAX_EPISODES=1e9`. Concurrency: one shared copy of the weights behind a mutex, plus a private copy per worker that is refreshed once per update (`snapshot()`/`update()` in `PolicyNetwork`), so the hot loops are plain floats with no data races; batches still interleave Hogwild-style. RL always fixes element 0 first.
 - Symmetry breaking in search uses bracelet generation (Joe Sawada's algorithm). C files (`bracelets.c`, `necklace.c`) are the reference implementations; C++ files are ports.
 
 ## Code style

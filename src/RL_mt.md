@@ -148,8 +148,8 @@ $$
 The program spawns `NUM_THREADS` worker threads (default=10) that:
 
 1. Share the policy network
-2. Independently generate episodes
-3. Asynchronously update network weights (lock-free Hogwild)
+2. Independently generate episodes on a private copy of the weights
+3. Apply gradient batches to the shared network under a mutex, then refresh the private copy
 
 ```mermaid
 sequenceDiagram
@@ -168,7 +168,7 @@ sequenceDiagram
 
 ### 5.2 Synchronization Challenges
 
-- **Weight Updates**: Lock-free (Hogwild async SGD) — worker threads update the shared network without a mutex; concurrent read-modify-writes are intentional and only the solution output is mutex-protected
+- **Weight Updates**: The shared weights are read and written only under a mutex, and each worker trains on a private copy refreshed once per gradient batch. Batches from different workers still interleave in arbitrary order (Hogwild-style) and updates can be lost, but the program has no data races; only the solution output is also mutex-protected.
 - **Solution Notification**: Atomic boolean flag for early termination
 - **Episode Counting**: Atomic integer for progress tracking
 

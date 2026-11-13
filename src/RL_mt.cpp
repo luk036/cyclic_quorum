@@ -100,23 +100,24 @@ struct ForwardResult {
     std::vector<float> z3;      // Output logits
 };
 
-// Policy Network class implements a neural network for reinforcement learning
-class PolicyNetwork {
-private:
-    int inputSize;  // Size of input layer (2*N for difference cover problem)
+// Weight matrices of the policy network. A worker runs forward()/backward() on
+// its own private copy of this struct, so the hot loops need no locking and no
+// atomics. PolicyNetwork below owns the shared copy and refreshes the private
+// ones once per gradient batch.
+struct Weights {
+    int inputSize;   // Size of input layer (2*N for difference cover problem)
     int outputSize;  // Size of output layer (N for difference cover problem)
     std::vector<std::vector<float>> W1, W2, W3;  // Weight matrices for 3 layers
-    std::vector<float> b1, b2, b3;  // Bias vectors for 3 layers
+    std::vector<float> b1, b2, b3;               // Bias vectors for 3 layers
 
-public:
     // Constructor initializes network with given input and output sizes
-    PolicyNetwork(int inSize, int outSize)
+    Weights(int inSize, int outSize)
         : inputSize(inSize), outputSize(outSize) {
-        InitializeWeights();
+        InitializeXavier();
     }
 
     // Initialize weights using Xavier initialization for better training
-    void InitializeWeights() {
+    void InitializeXavier() {
         // Xavier initialization helps maintain variance of activations across layers
         auto xavier = [](int in, int out) {
             return std::sqrt(6.0f / (in + out)) * (2.0f * rand() / RAND_MAX - 1.0f);
@@ -249,38 +250,75 @@ public:
         }
     }
 
-    // Update network weights using gradients. Lock-free (Hogwild-style async SGD).
-    // This is an intentional unsynchronised read-modify-write: concurrent updates
-    // and forward() reads form a C++ data race (formally UB). It relies on
-    // naturally-aligned 4-byte float accesses being tear-free on the target
-    // (x86-64/AArch64); lost updates are the intended noise, and it scales far
-    // better than serialising every update behind a mutex.
+};
+
+// Shared weights plus the two operations that touch them. Workers refresh
+// their private copy through snapshot() and apply gradients through update();
+// both hold the mutex, so no thread ever reads a weight while another writes
+// it: the program has no data races and no undefined behaviour. Batches from
+// different workers still interleave in arbitrary order (Hogwild-style), and a
+// worker's copy is stale by at most one batch.
+class PolicyNetwork {
+  private:
+    mutable std::mutex networkMutex;
+    Weights shared;
+
+  public:
+    // Constructor initializes network with given input and output sizes
+    PolicyNetwork(int inSize, int outSize) : shared(inSize, outSize) {}
+
+    // Copy the shared weights into a worker's private copy. The lock is held
+    // only for the length of the copy.
+    void snapshot(Weights& local) const {
+        std::lock_guard<std::mutex> lock(networkMutex);
+        for (int row = 0; row < HIDDEN_SIZE1; ++row) {
+            for (int col = 0; col < shared.inputSize; ++col) {
+                local.W1[row][col] = shared.W1[row][col];
+            }
+            local.b1[row] = shared.b1[row];
+        }
+        for (int row = 0; row < HIDDEN_SIZE2; ++row) {
+            for (int col = 0; col < HIDDEN_SIZE1; ++col) {
+                local.W2[row][col] = shared.W2[row][col];
+            }
+            local.b2[row] = shared.b2[row];
+        }
+        for (int row = 0; row < shared.outputSize; ++row) {
+            for (int col = 0; col < HIDDEN_SIZE2; ++col) {
+                local.W3[row][col] = shared.W3[row][col];
+            }
+            local.b3[row] = shared.b3[row];
+        }
+    }
+
+    // Apply one worker's gradients to the shared weights.
     void update(const std::vector<std::vector<float>>& gradW1,
                const std::vector<float>& gradB1,
                const std::vector<std::vector<float>>& gradW2,
                const std::vector<float>& gradB2,
                const std::vector<std::vector<float>>& gradW3,
                const std::vector<float>& gradB3) {
+        std::lock_guard<std::mutex> lock(networkMutex);
         // Update first layer weights and biases
         for (int row = 0; row < HIDDEN_SIZE1; ++row) {
-            for (int col = 0; col < inputSize; ++col) {
-                W1[row][col] -= LEARNING_RATE * gradW1[row][col];
+            for (int col = 0; col < shared.inputSize; ++col) {
+                shared.W1[row][col] -= LEARNING_RATE * gradW1[row][col];
             }
-            b1[row] -= LEARNING_RATE * gradB1[row];
+            shared.b1[row] -= LEARNING_RATE * gradB1[row];
         }
         // Update second layer weights and biases
         for (int row = 0; row < HIDDEN_SIZE2; ++row) {
             for (int col = 0; col < HIDDEN_SIZE1; ++col) {
-                W2[row][col] -= LEARNING_RATE * gradW2[row][col];
+                shared.W2[row][col] -= LEARNING_RATE * gradW2[row][col];
             }
-            b2[row] -= LEARNING_RATE * gradB2[row];
+            shared.b2[row] -= LEARNING_RATE * gradB2[row];
         }
         // Update output layer weights and biases
-        for (int row = 0; row < outputSize; ++row) {
+        for (int row = 0; row < shared.outputSize; ++row) {
             for (int col = 0; col < HIDDEN_SIZE2; ++col) {
-                W3[row][col] -= LEARNING_RATE * gradW3[row][col];
+                shared.W3[row][col] -= LEARNING_RATE * gradW3[row][col];
             }
-            b3[row] -= LEARNING_RATE * gradB3[row];
+            shared.b3[row] -= LEARNING_RATE * gradB3[row];
         }
     }
 };
@@ -325,6 +363,12 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
     std::vector<std::vector<float>> gradW3(N, std::vector<float>(HIDDEN_SIZE2, 0.0f));
     std::vector<float> gradB3(N, 0.0f);
 
+    // Private copy of the network. Every forward/backward pass runs on it, and
+    // it is refreshed from the shared copy once per update, so the hot loops
+    // touch no shared state.
+    Weights local(IN, N);
+    policyNet.snapshot(local);
+
     // Main training loop for each thread
     while (!solutionFound && episodeCounter < MAX_EPISODES) {
         int episode = episodeCounter++;
@@ -347,7 +391,7 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
 
             // Get action probabilities from policy network
             ForwardResult& fr = fwdList[step];
-            policyNet.forward(state, fr);
+            local.forward(state, fr);
 
             // Mask already chosen elements by setting their logits to very low value
             for (int idx = 0; idx < N; ++idx) {
@@ -430,12 +474,14 @@ void workerThread(PolicyNetwork& policyNet, int N, int D,
 
         // Calculate gradients for each time step (policy gradient theorem)
         for (int t = 0; t < T; ++t) {
-            policyNet.backward(fwdList[t], states[t], probsList[t], actions[t], returns[t],
+            local.backward(fwdList[t], states[t], probsList[t], actions[t], returns[t],
                                gradW1, gradB1, gradW2, gradB2, gradW3, gradB3);
         }
 
-        // Update network weights with calculated gradients
+        // Update network weights with calculated gradients, then pick up the
+        // other workers' updates before the next episode.
         policyNet.update(gradW1, gradB1, gradW2, gradB2, gradW3, gradB3);
+        policyNet.snapshot(local);
     }
 }
 
