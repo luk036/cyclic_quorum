@@ -51,6 +51,7 @@ When a complete sequence of D numbers is built, the `PrintD` function performs f
 #include <cstdlib>
 #include <cstring>  // for memset, memcpy
 #include <future>   // for future
+#include <string>   // for string (per-worker output buffer)
 #include <vector>
 
 #include "ThreadPool.h"
@@ -74,6 +75,7 @@ class DcGenerator {
 
     int8_t differences[MAX_C];
     // int count;
+    std::string out;  // Solutions found by this worker, flushed once when the task ends
 
   public:
     DcGenerator(int n, int d, int j)
@@ -147,12 +149,16 @@ class DcGenerator {
         // if (min == 1) {
         step_forward(D1, count);
         if (count >= N2) {
-            printf("\n");
+            // Format the whole line, then append it to this worker's buffer.
+            // One fwrite per worker at the end prevents interleaving that
+            // per-call printf would cause.
+            char line[8 * (MAX_D + 1)];
+            int n = 0;
             for (int idx = 1; idx <= D; ++idx) {
-                printf("%3d ", a[idx]);
+                n += snprintf(line + n, sizeof(line) - n, "%3d ", a[idx]);
             }
-            printf("\n");
-            fflush(stdout);
+            n += snprintf(line + n, sizeof(line) - n, "\n");
+            out.append(line, n);
         }
         step_backward(D1);
         // }
@@ -260,6 +266,12 @@ class DcGenerator {
             // s[idx] = 0;
         }
         // step_backward(1);
+
+        // Emit this worker's solutions in one locked fwrite call.
+        if (!out.empty()) {
+            fwrite(out.data(), 1, out.size(), stdout);
+            out.clear();
+        }
     }
 
     static void usage() { printf("Usage: necklace [n] [d] (n>=3, d>=3, n<=d*(d-1)+1)\n"); }
@@ -268,7 +280,7 @@ class DcGenerator {
 void InitParallel(int N, int D) {
     const unsigned int num_workers = std::max(1u, std::thread::hardware_concurrency() * 3 / 4);
     ThreadPool pool(num_workers);
-    printf("Number of workers: %u\n", num_workers);
+    fprintf(stderr, "Number of workers: %u\n", num_workers);  // Diagnostics on stderr
 
     std::vector<std::future<void>> results;
     results.reserve((N + 1) / 2 - (N - 1) / D);  // Pre-allocate space
@@ -284,11 +296,11 @@ void InitParallel(int N, int D) {
     }
     int countdown = start - end;
     for (auto &result : results) {
-        printf("%3d\r", countdown--);
-        fflush(stdout);
+        fprintf(stderr, "%3d\r", countdown--);  // Display progress on stderr
+        fflush(stderr);
         result.get();
     }
-    printf("\n");
+    fprintf(stderr, "\n");
 }
 
 int main(int argc, const char *argv[]) {
@@ -306,6 +318,6 @@ int main(int argc, const char *argv[]) {
     }
 
     InitParallel(N, D);
-    printf("Finished successfully\n");
+    fprintf(stderr, "Finished successfully\n");
     return 0;
 }

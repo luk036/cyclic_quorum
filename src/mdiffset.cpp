@@ -57,6 +57,7 @@ speed things up, and systematically exploring all possibilities.
 #include <cstdlib>
 #include <cstring>
 #include <future>  // for future
+#include <string>  // for string (per-worker output buffer)
 #include <vector>
 
 #include "ThreadPool.h"
@@ -80,6 +81,7 @@ struct DiffCover {
     int n2;
     // const int *begin_a;
     size_t size_n;
+    mutable std::string out;  // Solutions found by this worker, flushed once at the end
 
     /**
      * Constructs a DiffCover object with the given parameters.
@@ -110,13 +112,16 @@ struct DiffCover {
      * Prints the generated D-set to stdout.
      */
     void PrintD() const {
-        // print a
-        printf("\n");
+        // Format the whole line, then append it to this worker's buffer. One
+        // fwrite per worker at the end prevents interleaving that per-call
+        // printf would cause.
+        char line[8 * (MAX + 1)];
+        int n = 0;
         for (auto idx = 1; idx <= this->density; idx++) {
-            printf("%d ", this->a[idx]);
+            n += snprintf(line + n, sizeof(line) - n, "%d ", this->a[idx]);
         }
-        printf("\n");
-        fflush(stdout);
+        n += snprintf(line + n, sizeof(line) - n, "\n");
+        out.append(line, n);
         return;
     }
 
@@ -308,7 +313,7 @@ int main(int argc, char **argv) {
 
     auto num_workers = std::thread::hardware_concurrency() * 3 / 4;
     ThreadPool pool(num_workers);
-    printf("Number of workers: %d\n", num_workers);
+    fprintf(stderr, "Number of workers: %d\n", num_workers);  // Diagnostics on stderr
     std::vector<std::future<void>> results;
     auto start = (num_elem + 1) / 2;
     auto end = (num_elem - 1) / density + 1;
@@ -323,14 +328,18 @@ int main(int argc, char **argv) {
             memset(differences, 0, dc.size_n);
             differences[0] = 1;
             dc.GenD(1, 1, differences);
+            // Emit this worker's solutions in one locked fwrite call.
+            if (!dc.out.empty()) {
+                fwrite(dc.out.data(), 1, dc.out.size(), stdout);
+            }
         }));
     }
     auto countdown = start - end;
     for (auto &&result : results) {
-        printf("%3d\r", countdown--);
-        fflush(stdout);
+        fprintf(stderr, "%3d\r", countdown--);  // Display progress on stderr
+        fflush(stderr);
         result.get();
     }
-    printf("\n");
+    fprintf(stderr, "\n");
     return 0;
 }
