@@ -29,6 +29,7 @@ g++ -std=c++11 -pthread -O3 -o rl_cover src/RL_mt.cpp
 | `src/ThreadPool.h` | Single-header thread pool (used by all C++ search programs) |
 | `src/bracelet*.cpp`, `src/bracelets.c`, `src/necklace*.c`, `src/lyndon.c` | Necklace/bracelet generators (Joe Sawada, symmetry breaking) |
 | `src/diff_cover2.cpp`, `src/diff_cover3.cpp`, `src/bdiffcover.cpp`, `src/mdiffset.cpp` | Variants with different pruning / symmetry strategies |
+| `src/cover_ls.cpp` | Threaded min-conflicts local search: heuristic finisher that repairs near-miss covers at large `N` (incomplete, verifies nothing itself) |
 | `src/RL.cpp` | Single-threaded RL (simpler, good for understanding) |
 | `paper/` | LaTeX paper (`cqs.tex`, `cqs.md`, `cyclic_quorum.md`) |
 | `refs/` | Reference PDFs (don't modify) |
