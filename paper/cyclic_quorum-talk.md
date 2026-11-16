@@ -102,43 +102,56 @@
 :::
 ::::
 
-## Approach 2: Reinforcement Learning
+## Approach 2: Min-Conflicts Local Search
 
-:::: {.columns}
-::: {.column width="52%"}
-- Treat the search as a game: pick the numbers one at a time
-- **State:** which numbers are chosen and which differences are covered ($2N$ values)
-- **Action:** pick the next number; **reward:** how many new differences it covers
-- A policy network (three layers, ReLU, softmax) learns the strategy
-- Not guaranteed to find a solution within a fixed number of episodes
-:::
-::: {.column width="48%"}
-![](fig-rl-loop.svg){width="100%"}
-:::
-::::
+- Start from a random complete $d$-element set; a **conflict** is an uncovered residue
+- The only swaps that can cover $r$ are $s \to s \pm r$, so the neighbourhood has size at most $2d$, not $O(N)$
+- Apply the least-conflicts swap, **even when it worsens** the count: that is how the search leaves local optima
+- Restart from a fresh random set after a plateau
+- Incomplete, but every reported set is verified to cover all $N-1$ non-zero residues
 
-## The Policy Network
+## Local Search in Parallel
 
-- Input: the $2N$-dimensional state vector; hidden layers of size 256 and 128 with ReLU
-- Output: $N$ logits (Xavier initialisation); a masked softmax keeps chosen numbers out
-- Episode: $d-1$ sampled steps, then the last element is forced
-- Policy-gradient ascent with $\eta = 0.01$, $\gamma = 0.98$ and entropy bonus $\beta = 0.01$:
-  $$\theta \leftarrow \theta + \eta \sum_k G_k\, \nabla_\theta \log \pi_\theta(a_k \mid s_k)$$
+- The objective is cheap and the state is only $O(N)$ bytes, so workers never contend
+- Each worker keeps its own difference counts, candidate set and random generator
+- Workers share an atomic **stop flag** and one mutex for printing; the first to reach zero conflicts stops the rest
+- No locks or atomics in the hot loop: evaluating a move touches only the pairs incident to the swapped elements
 
-## Parallel Reinforcement Learning
+## Local Search: Results
 
-- Several worker threads, each acting as an independent agent
-- They **share one policy network** and contribute their gradients
-- The shared weights are guarded by a mutex; each worker trains on a **private copy** refreshed once per gradient batch
-- Batches still interleave in arbitrary order (Hogwild-style), but no data race and no undefined behaviour
-- Learning stops once a solution is found or `MAX_EPISODES` is reached
+| $N$ | $d$ | bound |
+|----:|----:|------:|
+| 151 | **15** | 13 |
+| 152 | **15** | 13 |
+| 160 | **15** | 13 |
+| 171 | **16** | 14 |
+| 182 | **16** | 14 |
+
+- Every entry is within one or two of the bound $d(d-1)+1 \ge N$
+- The full range $N = 151$ to $182$ is tabulated in the paper
+- Each reported set is verified to cover all $N-1$ non-zero residues
+
+## When $d = 14$ Is Impossible
+
+| $N$ | certificate | time |
+|----:|:------------|-----:|
+| 182 | parity counting | instant |
+| 181 | exhaustive search | 1 h 55 m |
+| 180 | exhaustive search | 2 h 37 m |
+| 179 | exhaustive search | 8 h 19 m |
+| 178 | exhaustive search | 3 h 48 m |
+
+- $N = 182$ is analytic: 91 pairs must cover 91 classes, and the parity split forces $2eo = 92$, hence $eo = 46$ with $e+o = 14$, which has no integer solution
+- For $178 \le N \le 181$ parity is silent, and on odd $N$ it does not even apply; the exact search decides them
+- No 14-element cover exists for $178 \le N \le 182$; $d = 15$ is open, 16 elements are the smallest known
 
 ## Comparison
 
 - **Recursive search:** systematic, with explicit pruning; guaranteed within its search space
-- **Reinforcement learning:** learned and reward-driven; not guaranteed
+- **Local search:** conflict repair from a complete candidate; not guaranteed, but strongest beyond the exhaustive range
 - Both exploit parallelism for speed
-- RL learns to find *a* solution, not all of them
+- The search can certify impossibility; the local search finds solutions
+- The local search returns *a* solution, not all of them
 
 # Applications
 
@@ -184,12 +197,13 @@
 - Earlier work tabulates base quorums for $N = 4$ to $111$
 - The recursive search extends the optimal base quorums to $N = 150$
 - The resulting quorum size stays close to $\sqrt{N}$
-- For larger $N$, the RL agent finds **nearly optimal** base quorums
+- Beyond that, the min-conflicts local search gives the best known sets for $N = 151$ to $182$
 
-## Optimal and Nearly Optimal Base Quorums
+## Optimal and Best-Known Base Quorums
 
 - Optimal base quorums for $N = 112$ to $150$ (recursive search)
-- Nearly optimal base quorums for $N = 151$ to $171$ (RL)
+- Best known base quorums for $N = 151$ to $182$ (local search)
+- $d = 14$ is impossible at $N = 181$ and $N = 182$; 16 elements are the smallest known there
 - The complete tables are given in the paper
 
 ## Quorum Size vs. Lower Bound
@@ -201,10 +215,11 @@
 | 130 | 13 | 12 | 1.08 |
 | 140 | 14 | 12 | 1.17 |
 | 150 | 14 | 13 | 1.08 |
-| 160 | 17 | 13 | 1.31 |
-| 171 | 17 | 14 | 1.21 |
+| 160 | 15 | 13 | 1.15 |
+| 171 | 16 | 14 | 1.14 |
+| 182 | 16 | 14 | 1.14 |
 
-- $N \le 150$: optimal (recursive search); $N > 150$: nearly optimal (RL)
+- $N \le 150$: optimal (recursive search); $N > 150$: best known (local search)
 
 # Implementation and Performance
 
@@ -215,21 +230,12 @@
 - Reflection only helps near the symmetric frontier, so the gain is modest
 - Measured speedup **1.07-1.17x**, with output identical to the reference solver (12 cases)
 
-## The RL Agent That Never Learned
+## Local-Search Engine
 
-- One implementation computed the gradient into a local vector and then **discarded it**
-- The update subtracted zero from every weight: a fixed random policy in disguise
-- Mean residue coverage stayed flat (about 12.3); a genuine gradient raises it to about 13.9
-- A second bug had the **entropy-bonus sign** inverted, collapsing the policy (5/16 solved; fixed: 11/16)
-
-## RL Efficiency
-
-- Cache activations during the episode instead of re-running the forward pass
-- Reuse per-thread buffers across episodes
-- Together these give **1.48x** on a single thread
-- Private weight copy per worker, refreshed once per gradient batch: no locks or atomics in the hot loops
-- Ten threads give **14x** over one thread on a fixed 20k-episode budget (single-core turbo included)
-- The copies cost no measurable throughput: within 2% of an unsynchronised version
+- Evaluate a candidate swap incrementally: only the pairs incident to the two swapped elements change
+- Conflict count is updated in constant time per candidate, so a worker runs at tens of thousands of moves per second
+- A few hundred moves typically suffice at $N = 151$
+- Workers share nothing but an atomic stop flag, so the search scales linearly with cores
 
 ## Robustness
 
@@ -242,27 +248,25 @@
 | Change | Effect |
 |:-------|:-------|
 | Bracelet symmetry | 1.07-1.17x, identical output |
-| Real backpropagation | coverage 12.3 to 13.9 |
-| Entropy sign fix | 11/16 vs 5/16 solved |
-| Cache and buffer reuse | 1.48x single-thread |
-| Parallel workers (private weight copies) | 14x on 10 threads |
+| Min-conflicts local search | d=15-16 at N=151-182 |
+| Incremental conflict counts | tens of thousands of moves per second |
 | Overflow-safe guard | no crashes |
-
-- Two of these were **bugs**, not tuning
 
 # Conclusions
 
 ## Conclusions
 
 - Optimal CQS reduce to finding relaxed $(N,d)$-difference sets
-- A systematic recursive search is guaranteed and enumerates bracelets in CAT
-- A parallel RL agent finds nearly optimal base quorums for larger $N$
+- A systematic recursive search is guaranteed and enumerates bracelets in CAT; optimal through $N = 150$
+- A min-conflicts local search gives the best known base quorums for $N = 151$ to $182$, one or two above the bound
+- The two methods are complementary: parity counting and the exhaustive search prove $d=14$ impossible at $N = 182$ and $N = 181$
 - Both approaches exploit parallelism to handle the combinatorial search
 
 ## Future Work
 
-- Extend the range of $N$ with more aggressive parallel search
-- Develop learned heuristics for pruning
+- Close the remaining gap to the bound, or certify that it cannot be closed (tightest: $N = 151$ to $157$, bound 13)
+- Decide whether $d = 15$ exists at $N = 181$ and $N = 182$
+- Develop better pruning rules for the exhaustive search
 - Count fixed-density prenecklaces
 - Generate $k$-ary necklaces with fixed content for $k > 2$
 - List other restricted classes of bracelets
