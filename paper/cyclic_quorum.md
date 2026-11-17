@@ -314,13 +314,13 @@ N & Base quorum \\
 \end{table*}
 ```
 
-### Limits: $d = 14$ is impossible for $178 \le N \le 182$
+### Limits: $d = 14$ is impossible for $177 \le N \le 182$
 
-The two approaches answer different questions. The local search finds a cover when one exists; the exhaustive search can certify that none does, provided the pruning keeps the tree small. Five consecutive instances just below the Singer bound are settled in these two ways. Table III lists them: for $N = 182$ the answer follows from a counting argument, and for $178 \le N \le 181$ it comes from completed exhaustive searches.
+The two approaches answer different questions. The local search finds a cover when one exists; the exhaustive search can certify that none does, provided the pruning keeps the tree small. Six consecutive instances just below the Singer bound are settled in these two ways. Table III lists them: for $N = 182$ the answer follows from a counting argument, and for $177 \le N \le 181$ it comes from completed exhaustive searches.
 
 **$N = 182$.** Here $182 = d(d-1)$, one below the Singer bound $d(d-1)+1 = 183$, so there is no slack: the 91 pairs of a 14-element set must cover exactly 91 distance classes. Split a candidate $S$ into $e$ even and $o$ odd elements, with $e+o=14$. Since 182 is even, $x-y \pmod{182}$ has the parity of $x-y$, so mixed-parity pairs yield all $2eo$ odd differences and same-parity pairs yield the $e(e-1)+o(o-1)$ even ones. The non-zero residues of $\mathbb{Z}_{182}$ are 91 odd and 90 even values, so $2eo \ge 91$; as $2eo$ is even, $2eo \ge 92$, leaving at most $182-92=90$ even differences, which is exactly the number required. Therefore $2eo=92$ and $eo=46$, but no integers satisfy $e+o=14$ and $eo=46$. Hence no 14-element cover exists.
 
-**$178 \le N \le 181$.** The same test is silent here: for these sizes the counting constraints admit a parity split, and on the odd values of $N$ the parity of $x-y$ is not even preserved modulo $N$, so no counting argument applies at all. The exhaustive search nevertheless decides each instance. Its pruning bound requires at most one repeated distance in every prefix at $N = 180, 181$, and at most two at $N = 178, 179$; those bounds keep the tree small enough for the search to complete, and it reports no solution in each case.
+**$177 \le N \le 181$.** The same test is silent here: for these sizes the counting constraints admit a parity split, and on the odd values of $N$ the parity of $x-y$ is not even preserved modulo $N$, so no counting argument applies at all. The exhaustive search nevertheless decides each instance. Its pruning bound allows at most one repeated distance in every prefix at $N = 180, 181$, at most two at $N = 178, 179$, and at most three at $N = 177$; those bounds keep the tree small enough for the search to complete, and it reports no solution in each case.
 
 ```{=latex}
 \begin{table*}[t]
@@ -335,12 +335,13 @@ $N$ & Relation to the bound & Certificate & Time \\
 180 & $d(d-1)-2$ & exhaustive search & 2 h 37 m \\
 179 & $d(d-1)-3$ & exhaustive search & 8 h 19 m \\
 178 & $d(d-1)-4$ & exhaustive search & 3 h 48 m \\
+177 & $d(d-1)-5$ & exhaustive search & 18 h 46 m \\
 \hline
 \end{tabular}
 \end{table*}
 ```
 
-In all five cases $d = 15$ remains open, and the smallest sets known have 16 elements (Table II).
+In all six cases $d = 15$ remains open, and the smallest sets known have 16 elements (Table II).
 
 ## Comparison of the Two Approaches
 
@@ -414,7 +415,7 @@ Min-conflicts local search & best-known sets for $N = 151$--$182$ \\
 
 ## Conclusion
 
-This paper studied two parallel computational approaches to constructing cyclic quorum systems, equivalently to finding difference covers. The first is a systematic recursive search with coverage-based pruning, reflection symmetry breaking, and partition-level parallelism. It is exact: it is guaranteed to find a solution whenever one exists in the search space, and it yields optimal base quorums through $N = 150$. The second is a min-conflicts local search that repairs a complete candidate set one conflict at a time. Although incomplete, it is the more effective of the two beyond the exhaustive range: it produces base quorums for $N = 151$ to $182$ that are one or two elements above the bound $d(d-1)+1 \ge N$. The two methods are complementary in a second sense as well: the search can certify impossibility, and we used it to show that no 14-element cover exists for $178 \le N \le 182$, with a parity argument settling $N = 182$ and completed exhaustive searches settling the other four.
+This paper studied two parallel computational approaches to constructing cyclic quorum systems, equivalently to finding difference covers. The first is a systematic recursive search with coverage-based pruning, reflection symmetry breaking, and partition-level parallelism. It is exact: it is guaranteed to find a solution whenever one exists in the search space, and it yields optimal base quorums through $N = 150$. The second is a min-conflicts local search that repairs a complete candidate set one conflict at a time. Although incomplete, it is the more effective of the two beyond the exhaustive range: it produces base quorums for $N = 151$ to $182$ that are one or two elements above the bound $d(d-1)+1 \ge N$. The two methods are complementary in a second sense as well: the search can certify impossibility, and we used it to show that no 14-element cover exists for $177 \le N \le 182$, with a parity argument settling $N = 182$ and completed exhaustive searches settling the other five.
 
 Future work includes generating $k$-ary necklaces with fixed content (where the count of each character is fixed) for $k > 2$, counting fixed-density prenecklaces, and developing efficient generators for other restricted classes of bracelets. On the solution side, the remaining gap is small---one or two elements above the bound---and closing it, or certifying that it cannot be closed, is the natural next target; the tightest instances are $N = 151$ to $157$, where the bound is 13.
 

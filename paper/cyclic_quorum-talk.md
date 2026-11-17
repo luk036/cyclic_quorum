@@ -140,10 +140,11 @@
 | 180 | exhaustive search | 2 h 37 m |
 | 179 | exhaustive search | 8 h 19 m |
 | 178 | exhaustive search | 3 h 48 m |
+| 177 | exhaustive search | 18 h 46 m |
 
 - $N = 182$ is analytic: 91 pairs must cover 91 classes, and the parity split forces $2eo = 92$, hence $eo = 46$ with $e+o = 14$, which has no integer solution
-- For $178 \le N \le 181$ parity is silent, and on odd $N$ it does not even apply; the exact search decides them
-- No 14-element cover exists for $178 \le N \le 182$; $d = 15$ is open, 16 elements are the smallest known
+- For $177 \le N \le 181$ parity is silent, and on odd $N$ it does not even apply; the exact search decides them
+- No 14-element cover exists for $177 \le N \le 182$; $d = 15$ is open, 16 elements are the smallest known
 
 ## Comparison
 
