@@ -208,9 +208,9 @@ method is incomplete: these are the best sets found, not proven optima. The
 bound `d(d-1)+1 >= N` gives `d >= 13` for `N <= 157` and `d >= 14` for
 `N >= 158`, so most rows are within one or two of it.
 
-For `N = 177` to `182`, `d = 14` is proved impossible: by parity counting for
+For `N = 176` to `182`, `d = 14` is proved impossible: by parity counting for
 `182`, and by completed exhaustive searches (`diff_cover`, fifteen threads) for
-`177` to `181`. The next target there is `d = 15`, so the 16-element sets listed
+`176` to `181`. The next target there is `d = 15`, so the 16-element sets listed
 below are not known to be optimal.
 
 ```text
