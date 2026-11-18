@@ -205,8 +205,13 @@ Local search (best known so far)
 A min-conflicts local search over the cover condition improves on the RL rows.
 Every set below was verified to cover all nonzero residues modulo `N`. The
 method is incomplete: these are the best sets found, not proven optima. The
-bound `d(d-1)+1 >= N` gives `d >= 13` for `N <= 157` and `d >= 14` for
-`N >= 158`, so most rows are within one or two of it.
+bound `d(d-1)+1 >= N` gives `d >= 13` for `N <= 157`, `d >= 14` for
+`158 <= N <= 183`, and `d >= 15` for `184 <= N <= 211`, so most rows are within
+one or two of it.
+
+The table runs from `N = 151` to `184`. `N = 183` is the Singer optimum of the
+table above (`d = 14`), so the local search resumes at `184`, where `d = 15` is
+the open target and the listed set uses one more element.
 
 For `N = 176` to `182`, `d = 14` is proved impossible: by parity counting for
 `182`, and by completed exhaustive searches (`diff_cover`, fifteen threads) for
@@ -247,4 +252,6 @@ below are not known to be optimal.
 180:   0   8  21  29  48  61  77  79  83  84  91  94 103 128 141 169   (LS, d=16)
 181:   0   5   7  15  16  26  51  76  88 101 110 141 155 158 164 168   (LS, d=16)
 182:   0  10  42  56  63  68  91 107 113 115 118 122 134 138 151 152   (LS, d=16)
+183:  (the Singer optimum of the table above: d=14)
+184:   0  19  32  41  71  86  91 107 129 133 135 136 143 147 160 170   (LS, d=16)
 ```
