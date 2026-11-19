@@ -267,9 +267,11 @@ below are not known to be optimal.
 195:   0   3   4  11  49  60  86 101 106 115 118 128 134 136 152 159   (LS, d=16)
 ```
 
-`N = 196` to `200` have no row yet: the search has not produced a 16-element
-set there. That is a statement about this local search, not about the
-instances. The `184` to `195` rows use the same method with two extra devices:
+`N = 196` to `200` have no row: the search has not produced a 16-element set
+there. That is a statement about this local search, not about the instances.
+For `196` to `199` five seed families of 900 s each, all warm started from a
+17-element cover, produced nothing, and `200` did not even yield a 17-element
+cover quickly. The `184` to `195` rows use two devices beyond the plain search:
 a warm start from a 17-element cover, whose extra element is dropped at each
 restart, and an antipodal move, because the class `N/2` can only be covered by a
 pair `(t, t + N/2)` and the plain same-element move cannot create one.
