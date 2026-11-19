@@ -209,9 +209,9 @@ bound `d(d-1)+1 >= N` gives `d >= 13` for `N <= 157`, `d >= 14` for
 `158 <= N <= 183`, and `d >= 15` for `184 <= N <= 211`, so most rows are within
 one or two of it.
 
-The table runs from `N = 151` to `184`. `N = 183` is the Singer optimum of the
-table above (`d = 14`), so the local search resumes at `184`, where `d = 15` is
-the open target and the listed set uses one more element.
+The table runs from `N = 151` to `195` without gaps. `N = 183` is the Singer
+optimum of the table above (`d = 14`), so the local search resumes at `184`,
+where `d = 15` is the open target and the listed set uses one more element.
 
 For `N = 176` to `182`, `d = 14` is proved impossible: by parity counting for
 `182`, and by completed exhaustive searches (`diff_cover`, fifteen threads) for
@@ -254,4 +254,22 @@ below are not known to be optimal.
 182:   0  10  42  56  63  68  91 107 113 115 118 122 134 138 151 152   (LS, d=16)
 183:  (the Singer optimum of the table above: d=14)
 184:   0  19  32  41  71  86  91 107 129 133 135 136 143 147 160 170   (LS, d=16)
+185:   0  29  38  42  52  62  64  66  68  69 100 111 119 129 144 165   (LS, d=16)
+186:   0   4   8  13  30  32  46  49  72 103 138 147 148 153 158 165   (LS, d=16)
+187:   0   1   5  11  25  34  44  46  59  62  69 101 109 139 161 175   (LS, d=16)
+188:   0   6  11  15  21  33  54  69 103 119 122 147 148 162 179 186   (LS, d=16)
+189:   0   6  20  21  25  43  46  52  59  76  87  88 130 135 137 145   (LS, d=16)
+190:   0   4  12  30  46  66  67 105 107 111 114 116 124 138 139 167   (LS, d=16)
+191:   0  10  13  20  29  40  60  64  65  82  97 103 105 131 143 145   (LS, d=16)
+192:   0   5  39  40  48  63  92 105 107 109 119 125 130 137 156 159   (LS, d=16)
+193:   0   1   6   9  16  29  53  78  96 100 117 134 136 137 148 167   (LS, d=16)
+194:   0   2   6   7  22  28  72  85 102 110 119 129 147 158 161 170   (LS, d=16)
+195:   0   3   4  11  49  60  86 101 106 115 118 128 134 136 152 159   (LS, d=16)
 ```
+
+`N = 196` to `200` have no row yet: the search has not produced a 16-element
+set there. That is a statement about this local search, not about the
+instances. The `184` to `195` rows use the same method with two extra devices:
+a warm start from a 17-element cover, whose extra element is dropped at each
+restart, and an antipodal move, because the class `N/2` can only be covered by a
+pair `(t, t + N/2)` and the plain same-element move cannot create one.
