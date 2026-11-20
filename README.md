@@ -209,9 +209,11 @@ bound `d(d-1)+1 >= N` gives `d >= 13` for `N <= 157`, `d >= 14` for
 `158 <= N <= 183`, and `d >= 15` for `184 <= N <= 211`, so most rows are within
 one or two of it.
 
-The table runs from `N = 151` to `195` without gaps. `N = 183` is the Singer
+The table runs from `N = 151` to `209` without gaps. `N = 183` is the Singer
 optimum of the table above (`d = 14`), so the local search resumes at `184`,
 where `d = 15` is the open target and the listed set uses one more element.
+From `N = 196` the table switches to 17 elements: no 16-element set was found
+there, but `d = 15` and `d = 16` are not proved impossible either.
 
 For `N = 176` to `182`, `d = 14` is proved impossible: by parity counting for
 `182`, and by completed exhaustive searches (`diff_cover`, fifteen threads) for
@@ -265,13 +267,28 @@ below are not known to be optimal.
 193:   0   1   6   9  16  29  53  78  96 100 117 134 136 137 148 167   (LS, d=16)
 194:   0   2   6   7  22  28  72  85 102 110 119 129 147 158 161 170   (LS, d=16)
 195:   0   3   4  11  49  60  86 101 106 115 118 128 134 136 152 159   (LS, d=16)
+196:   0   9  23  44  66  72  96 106 108 122 125 126 128 133 141 164 173   (LS, d=17)
+197:   0  12  15  19  55  61  93 102 103 112 114 116 119 127 141 147 179   (LS, d=17)
+198:   0   6  15  16  20  28  33  49  60  90  96 125 127 149 152 156 175   (LS, d=17)
+199:   0   9  24  32  38  48  59  87  90  95 100 102 119 120 124 146 164   (LS, d=17)
+200:   0  12  33  57  67  87 103 105 106 112 143 148 156 165 171 175 186   (LS, d=17)
+201:   0   3  13  17  43  45  50  61  70 100 106 107 126 129 141 149 180   (LS, d=17)
+202:   0  28  42  55  58  87 111 116 118 136 157 159 165 176 180 192 193   (LS, d=17)
+203:   0   2  14  34  38  58  87 109 126 136 144 161 177 191 192 194 198   (LS, d=17)
+204:   0  16  17  28  35  48  54  80  81  90  95  98 120 122 124 181 183   (LS, d=17)
+205:   0  16  24  25  32  34  38  69  80  92 109 137 139 142 158 163 178   (LS, d=17)
+206:   0  16  18  19  22  44  52  59  83  90  99 104 110 122 139 149 152   (LS, d=17)
+207:   0  16  42  45  54  56 109 113 116 137 138 144 152 157 174 184 189   (LS, d=17)
+208:   0   6   7  10  15  28  43  56  60  76  87  99 101 111 141 151 189   (LS, d=17)
+209:   0  19  23  44  45  52  55  61  75 109 114 125 132 160 172 185 187   (LS, d=17)
 ```
 
-`N = 196` to `200` have no row: the search has not produced a 16-element set
-there. That is a statement about this local search, not about the instances.
-For `196` to `199` five seed families of 900 s each, all warm started from a
-17-element cover, produced nothing, and `200` did not even yield a 17-element
-cover quickly. The `184` to `195` rows use two devices beyond the plain search:
+`N = 196` and above use 17 elements because no 16-element set was found there:
+nine seed families of search at `196` and `197` (about 7.5 h and 5.5 h of
+ten-thread work) and five at `198` and `199` all came back empty. That is a
+limit of this local search, not a proof that 15 or 16 elements are impossible in
+that range. The `184` to `195` rows use two devices beyond the plain search:
 a warm start from a 17-element cover, whose extra element is dropped at each
 restart, and an antipodal move, because the class `N/2` can only be covered by a
-pair `(t, t + N/2)` and the plain same-element move cannot create one.
+pair `(t, t + N/2)` and the plain same-element move cannot create one. Above
+`196` the same warm start is taken from an 18-element cover.
