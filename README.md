@@ -209,12 +209,12 @@ bound `d(d-1)+1 >= N` gives `d >= 13` for `N <= 157`, `d >= 14` for
 `158 <= N <= 183`, and `d >= 15` for `184 <= N <= 211`, so most rows are within
 one or two of it.
 
-The table runs from `N = 151` to `217` without gaps. `N = 183` is the Singer
-optimum of the table above (`d = 14`), so the local search resumes at `184`,
-where `d = 15` is the open target and the listed set uses one more element.
-From `N = 196` the table switches to 17 elements: no 16-element set was found
-there, but `d = 15` and `d = 16` are not proved impossible either. Above `217`
-the search finds nothing with 17 elements either.
+The table runs from `N = 151` to `220`, with `N = 219` the only gap. `N = 183`
+is the Singer optimum of the table above (`d = 14`), so the local search resumes
+at `184`, where `d = 15` is the open target and the listed set uses one more
+element. From `N = 196` the table switches to 17 elements: no 16-element set was
+found there, but `d = 15` and `d = 16` are not proved impossible either. Above
+`220` the search finds nothing with 17 elements either.
 
 For `N = 176` to `182`, `d = 14` is proved impossible: by parity counting for
 `182`, and by completed exhaustive searches (`diff_cover`, fifteen threads) for
@@ -290,6 +290,8 @@ below are not known to be optimal.
 215:   0   4   9  20  23  33  43  54  79  80  86  88 113 116 128 180 197   (LS, d=17)
 216:   0   6  10  23  53  74  75  79  86  88  95 114 124 129 132 156 191   (LS, d=17)
 217:   0   9  28  34  45  55  60  68  71  98 112 116 118 140 147 151 152   (LS, d=17)
+218:   0   4   7  15  38  54  55  74  80  98 126 147 156 159 161 169 188   (LS, d=17)
+220:   0   1  12  36  51  52  54  57  61  74  84  98 127 142 153 161 192   (LS, d=17)
 ```
 
 `N = 196` and above use 17 elements because no 16-element set was found there:
@@ -306,6 +308,8 @@ element is dropped at each restart. An **antipodal move** handles the class
 move cannot create. A **tabu list** on values, with aspiration, stops the search
 oscillating between two states that each miss one class.
 
-`N = 218` to `225` still produced nothing with 17 elements, even after 30 min
-per value across two seeds, and `N = 250` stalls with 18 classes uncovered,
-which is where 17 elements run out of slack: 136 pairs must cover 125 classes.
+`N = 218` and `220` needed 81 and 24 minutes respectively, the former only after
+the warm start; `N = 219` resisted 2 h of cold search plus three 30-minute warm
+repairs. Higher values were not reached: `N = 225` and `250` stall with 18
+classes uncovered, which is where 17 elements run out of slack (136 pairs must
+cover 125 classes at 250).
