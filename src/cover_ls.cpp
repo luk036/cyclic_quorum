@@ -12,6 +12,8 @@
  *
  * Environment:
  *   LS_SEED=n        shift the fixed seed family (reproducible per n)
+ *   LS_GREEDY=1      build each start greedily instead of uniformly at random;
+ *                    needed once N approaches the top of the range
  *   LS_START="a b c" start every restart from a known cover; with D+1 values one
  *                    is dropped, which is what makes N near the top of the range
  *                    reachable at all
@@ -44,6 +46,7 @@ struct Board {
     std::vector<int> unclist;  // residues with cnt == 0
     std::vector<char> in;      // in[x] = 1 iff x is in S
     std::vector<int> hint;     // optional warm-start cover, used as a (D+1)-set
+    bool greedy = false;       // build starts greedily instead of uniformly
     std::mt19937 rng;
 
     Board(int n, int d, unsigned seed) : N(n), D(d), cnt(n, 0), S(d), in(n, 0), rng(seed) {}
@@ -67,6 +70,52 @@ struct Board {
         return static_cast<int>(unclist.size());
     }
 
+    // Greedy construction: each pick maximises the number of classes that are
+    // still uncovered, sampled from a few dozen random candidates so restarts
+    // differ. Uniformly random sets leave too many classes open at large N for
+    // the repair to close.
+    void GreedyStart() {
+        std::fill(in.begin(), in.end(), 0);
+        std::vector<int> partial;
+        std::vector<char> seen(N, 0);
+        for (int i = 0; i < D; ++i) {
+            int bestX = -1, bestScore = -1;
+            for (int t = 0; t < 40; ++t) {
+                const int x = static_cast<int>(rng() % N);
+                if (in[x]) continue;
+                int score = 0;
+                for (int v : partial) {
+                    int c = x - v;
+                    if (c < 0) c = -c;
+                    if (c > N - c) c = N - c;
+                    if (!seen[c]) {
+                        seen[c] = 1;
+                        if (cnt[c] == 0) ++score;
+                    }
+                }
+                for (int v : partial) {
+                    int c = x - v;
+                    if (c < 0) c = -c;
+                    if (c > N - c) c = N - c;
+                    seen[c] = 0;
+                }
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestX = x;
+                }
+            }
+            if (bestX < 0) {
+                do {
+                    bestX = static_cast<int>(rng() % N);
+                } while (in[bestX]);
+            }
+            in[bestX] = 1;
+            S[i] = bestX;
+            for (int j = 0; j < i; ++j) AddPair(S[j], bestX, +1);
+            partial.push_back(bestX);
+        }
+    }
+
     void RandomStart() {
         std::fill(in.begin(), in.end(), 0);
         if (hint.size() == static_cast<size_t>(D) + 1) {
@@ -79,6 +128,10 @@ struct Board {
                 S[k++] = hint[i];
                 in[hint[i]] = 1;
             }
+            return;
+        }
+        if (greedy) {
+            GreedyStart();
             return;
         }
         for (int i = 0; i < D; ++i) {
@@ -132,6 +185,12 @@ void Worker(int N, int D, std::atomic<bool> &found, std::mutex &out, std::atomic
             std::chrono::steady_clock::time_point deadline) {
     Board board(N, D, seed);
     board.hint = start;
+    board.greedy = std::getenv("LS_GREEDY") != nullptr;
+    // Tabu list over values: tabu[x] is the tick until which re-inserting x is
+    // forbidden. A move may still be taken earlier if it beats the best count
+    // seen in this restart (aspiration), which is what keeps the search from
+    // cycling between two states that each miss one class.
+    std::vector<int> tabu(N, 0);
     auto expired = [&]() { return std::chrono::steady_clock::now() > deadline; };
 
     while (!found && !expired()) {
@@ -139,9 +198,8 @@ void Worker(int N, int D, std::atomic<bool> &found, std::mutex &out, std::atomic
         int cur = board.Rebuild();
         int stall = 0;
         int ticks = 0;
-        // Reverse-move tabu: without it the search can swap a value in, then
-        // straight back out, cycling between two states with one class missing.
-        int tabuI = -1, tabuX = -1, tabuUntil = 0;
+        int bestSeen = cur;
+        std::fill(tabu.begin(), tabu.end(), 0);
 
         while (cur > 0 && !found) {
             if (cur < best.load()) best.store(cur);
@@ -149,13 +207,22 @@ void Worker(int N, int D, std::atomic<bool> &found, std::mutex &out, std::atomic
 
             const int r = board.unclist[board.rng() % board.unclist.size()];
             int bestI = -1, bestX = -1, bestUnc = cur + 1000;
+            // Falls back on the best tabu move when every candidate is tabu,
+            // which is the usual tabu-search rule and avoids a livelock of
+            // fruitless restarts.
+            int anyI = -1, anyX = -1, anyUnc = cur + 1000;
             for (int i = 0; i < D; ++i) {
                 const int s = board.S[i];
                 for (int sgn = 0; sgn < 2; ++sgn) {
                     const int x = (s + (sgn ? r : N - r)) % N;
                     if (board.in[x]) continue;
-                    if (i == tabuI && x == tabuX && ticks < tabuUntil) continue;
                     const int after = board.EvaluateSwap(i, x);
+                    if (after < anyUnc) {
+                        anyUnc = after;
+                        anyI = i;
+                        anyX = x;
+                    }
+                    if (ticks < tabu[x] && after >= bestSeen) continue;
                     if (after < bestUnc) {
                         bestUnc = after;
                         bestI = i;
@@ -172,8 +239,13 @@ void Worker(int N, int D, std::atomic<bool> &found, std::mutex &out, std::atomic
                     if (board.in[x]) continue;
                     for (int i = 0; i < D; ++i) {
                         if (i == j) continue;
-                        if (i == tabuI && x == tabuX && ticks < tabuUntil) continue;
                         const int after = board.EvaluateSwap(i, x);
+                        if (after < anyUnc) {
+                            anyUnc = after;
+                            anyI = i;
+                            anyX = x;
+                        }
+                        if (ticks < tabu[x] && after >= bestSeen) continue;
                         if (after < bestUnc) {
                             bestUnc = after;
                             bestI = i;
@@ -182,16 +254,21 @@ void Worker(int N, int D, std::atomic<bool> &found, std::mutex &out, std::atomic
                     }
                 }
             }
+            if (bestI < 0) {  // every candidate was tabu: take the best anyway
+                bestI = anyI;
+                bestX = anyX;
+                bestUnc = anyUnc;
+            }
             if (bestI < 0) {  // no candidate covers r; keep the restart moving
                 ++stall;
                 if (stall > kStallLimit) break;
                 continue;
             }
             const bool improved = bestUnc < cur;
-            tabuI = bestI;
-            tabuX = board.S[bestI];
-            tabuUntil = ticks + 4 + static_cast<int>(board.rng() % static_cast<unsigned>(D));
+            tabu[board.S[bestI]] =
+                ticks + 4 + static_cast<int>(board.rng() % static_cast<unsigned>(D));
             cur = board.ApplySwap(bestI, bestX);
+            if (cur < bestSeen) bestSeen = cur;
             if (improved) {
                 stall = 0;
             } else if (++stall > kStallLimit) {
