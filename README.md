@@ -209,12 +209,13 @@ bound `d(d-1)+1 >= N` gives `d >= 13` for `N <= 157`, `d >= 14` for
 `158 <= N <= 183`, and `d >= 15` for `184 <= N <= 211`, so most rows are within
 one or two of it.
 
-The table runs from `N = 151` to `220`, with `N = 219` the only gap. `N = 183`
-is the Singer optimum of the table above (`d = 14`), so the local search resumes
-at `184`, where `d = 15` is the open target and the listed set uses one more
-element. From `N = 196` the table switches to 17 elements: no 16-element set was
-found there, but `d = 15` and `d = 16` are not proved impossible either. Above
-`220` the search finds nothing with 17 elements either.
+The table runs from `N = 151` to `241` with gaps at `234`-`236`, `238` and
+`240`, and nothing above `241`. `N = 183` is the Singer optimum of the table
+above (`d = 14`), so the local search resumes at `184`, where `d = 15` is the
+open target and the listed set uses one more element. From `N = 196` the table
+uses 17 elements, except where a 17-element set was not found and 18 are used
+instead: `219`, and everything from `221` up. Neither `d = 15` nor `d = 16` is
+proved impossible anywhere in this range.
 
 For `N = 176` to `182`, `d = 14` is proved impossible: by parity counting for
 `182`, and by completed exhaustive searches (`diff_cover`, fifteen threads) for
@@ -222,7 +223,6 @@ For `N = 176` to `182`, `d = 14` is proved impossible: by parity counting for
 below are not known to be optimal.
 
 ```text
-151:   0   3   4  15  23  50  66  71  72  80  81  82  89 114 125 127   (LS, d=16)
 151:   0   2  14  29  66  68  74  75  85  88  98 111 116 132 136   (LS, d=15)
 152:   0   2   4  19  28  43  46  66  76  77  98 127 133 135 140   (LS, d=15)
 153:   0  22  26  42  45  59  82  86  92  97 110 121 122 129 131   (LS, d=15)
@@ -291,7 +291,24 @@ below are not known to be optimal.
 216:   0   6  10  23  53  74  75  79  86  88  95 114 124 129 132 156 191   (LS, d=17)
 217:   0   9  28  34  45  55  60  68  71  98 112 116 118 140 147 151 152   (LS, d=17)
 218:   0   4   7  15  38  54  55  74  80  98 126 147 156 159 161 169 188   (LS, d=17)
+219:   0  13  31  34  36  37  39  56  66  84 123 125 137 170 177 181 185 186   (LS, d=18)
 220:   0   1  12  36  51  52  54  57  61  74  84  98 127 142 153 161 192   (LS, d=17)
+221:   0  25  29  34  37  42  44  47  69  70  95 119 125 141 162 179 182 193   (LS, d=18)
+222:   0   2  32  33  73  97 100 106 116 123 136 144 148 162 182 193 202 217   (LS, d=18)
+223:   0  12  15  22  30  60  76  85 100 119 132 160 161 168 198 212 214 218   (LS, d=18)
+224:   0   2   3  21  45  62  67  77  87 135 146 169 173 174 175 182 196 208   (LS, d=18)
+225:   0   2  40  56  65  75  83  97 114 117 121 142 147 159 165 176 212 213   (LS, d=18)
+226:   0  14  31  38  51  54  57  60  93 101 116 121 126 127 128 142 146 174   (LS, d=18)
+227:   0   7  26  31  76  89  92  93 122 129 130 132 144 150 153 164 180 209   (LS, d=18)
+228:   0   1  10  18  25  28  41  70  74  92 104 113 118 124 172 191 193 195   (LS, d=18)
+229:   0  20  25  35  51  81  87  91  98 109 110 137 151 184 186 192 195 216   (LS, d=18)
+230:   0   3   8  16  31  68  85  89 115 123 155 185 187 194 204 205 211 218   (LS, d=18)
+231:   0  15  18  51  59  82 104 105 118 134 138 144 151 153 165 176 181 225   (LS, d=18)
+232:   0   8  11  35  38  40  44  56  81  98 107 138 156 159 166 178 179 193   (LS, d=18)
+233:   0   2   9  28  41  45  51  81  97 105 141 163 168 185 188 199 200 206   (LS, d=18)
+237:   0   1   6  11  20  29  42  72  84  86 118 144 147 151 198 200 213 221   (LS, d=18)
+239:   0  11  36  53  56  76 116 123 124 128 134 142 155 157 179 185 192 201   (LS, d=18)
+241:   0   1   5  11  30  32  39  54  72  80 110 124 170 171 175 184 187 207   (LS, d=18)
 ```
 
 `N = 196` and above use 17 elements because no 16-element set was found there:
@@ -310,9 +327,13 @@ oscillating between two states that each miss one class.
 
 `N = 218` and `220` needed 81 and 24 minutes respectively, the former only after
 the warm start. They are islands rather than a frontier: `N = 219` resisted two
-hours of cold search and seven 30-minute warm repairs, and `N = 221` and `222`
-each took an hour of cold search plus four warm repairs, all without a result.
-At this density the method either lands on a cover or stalls one or two classes
-short, and which of the two happens is decided by the seed, not by the budget.
-Higher values are further out still: `N = 250` stalls 18 classes short, with 136
-pairs for 125 classes.
+hours of cold search and seven 30-minute warm repairs at `d = 17`, and `221` and
+`222` each took an hour of cold search plus four warm repairs, all without a
+result. At this density the method either lands on a cover or stalls one or two
+classes short, and which of the two happens is decided by the seed, not by the
+budget. One more element removes the difficulty entirely: with `d = 18` all
+three fall in seconds to minutes (`219` in 2 s, `221` in 24 s, `222` in 2 s).
+
+The `d = 18` block runs to `241`. Beyond that the spare capacity runs out again:
+`N = 242` to `245` produced nothing, and at `N = 256` the search stalls 12
+classes short, with 153 pairs for 128 classes.
