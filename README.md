@@ -209,8 +209,8 @@ bound `d(d-1)+1 >= N` gives `d >= 13` for `N <= 157`, `d >= 14` for
 `158 <= N <= 183`, and `d >= 15` for `184 <= N <= 211`, so most rows are within
 one or two of it.
 
-The table runs from `N = 151` to `241` with gaps at `234`-`236`, `238` and
-`240`, and nothing above `241`. `N = 183` is the Singer optimum of the table
+The table runs from `N = 151` to `241` without gaps, and nothing was found above
+`241`. `N = 183` is the Singer optimum of the table
 above (`d = 14`), so the local search resumes at `184`, where `d = 15` is the
 open target and the listed set uses one more element. From `N = 196` the table
 uses 17 elements, except where a 17-element set was not found and 18 are used
@@ -306,8 +306,13 @@ below are not known to be optimal.
 231:   0  15  18  51  59  82 104 105 118 134 138 144 151 153 165 176 181 225   (LS, d=18)
 232:   0   8  11  35  38  40  44  56  81  98 107 138 156 159 166 178 179 193   (LS, d=18)
 233:   0   2   9  28  41  45  51  81  97 105 141 163 168 185 188 199 200 206   (LS, d=18)
+234:   0  21  34  39  52  72  78 119 121 141 148 166 169 178 179 183 194 202   (LS, d=18)
+235:   0  28  55  56  66  78 115 118 120 136 153 161 167 174 187 191 197 206   (LS, d=18)
+236:   0   3   4  13  25  88  90  98 112 117 123 128 143 156 160 179 190 197   (LS, d=18)
 237:   0   1   6  11  20  29  42  72  84  86 118 144 147 151 198 200 213 221   (LS, d=18)
+238:   0   1   8  20  29  98 108 113 124 137 139 147 161 164 178 194 196 200   (LS, d=18)
 239:   0  11  36  53  56  76 116 123 124 128 134 142 155 157 179 185 192 201   (LS, d=18)
+240:   0   3  28  32  33  39  44  71  78  87  95  97 110 118 132 152 167 170   (LS, d=18)
 241:   0   1   5  11  30  32  39  54  72  80 110 124 170 171 175 184 187 207   (LS, d=18)
 ```
 
@@ -334,6 +339,9 @@ classes short, and which of the two happens is decided by the seed, not by the
 budget. One more element removes the difficulty entirely: with `d = 18` all
 three fall in seconds to minutes (`219` in 2 s, `221` in 24 s, `222` in 2 s).
 
-The `d = 18` block runs to `241`. Beyond that the spare capacity runs out again:
-`N = 242` to `245` produced nothing, and at `N = 256` the search stalls 12
-classes short, with 153 pairs for 128 classes.
+The `d = 18` block is complete through `241`. Getting there needed the long
+horizon on the last five interior gaps: `234` in 10 min, `235` in 57 min, `236`
+in 11 min, `238` in 51 min and `240` in 17 min, all from a cold greedy start
+without any warm-start help. Beyond `241` the spare capacity runs out again:
+`242` to `245` produced nothing, and at `N = 256` the search stalls 12 classes
+short, with 153 pairs for 128 classes.
