@@ -309,7 +309,10 @@ move cannot create. A **tabu list** on values, with aspiration, stops the search
 oscillating between two states that each miss one class.
 
 `N = 218` and `220` needed 81 and 24 minutes respectively, the former only after
-the warm start; `N = 219` resisted 2 h of cold search plus three 30-minute warm
-repairs. Higher values were not reached: `N = 225` and `250` stall with 18
-classes uncovered, which is where 17 elements run out of slack (136 pairs must
-cover 125 classes at 250).
+the warm start. They are islands rather than a frontier: `N = 219` resisted two
+hours of cold search and seven 30-minute warm repairs, and `N = 221` and `222`
+each took an hour of cold search plus four warm repairs, all without a result.
+At this density the method either lands on a cover or stalls one or two classes
+short, and which of the two happens is decided by the seed, not by the budget.
+Higher values are further out still: `N = 250` stalls 18 classes short, with 136
+pairs for 125 classes.
