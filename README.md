@@ -210,12 +210,12 @@ bound `d(d-1)+1 >= N` gives `d >= 13` for `N <= 157`, `d >= 14` for
 one or two of it.
 
 The table runs from `N = 151` to `241` without gaps, and nothing was found above
-`241`. `N = 183` is the Singer optimum of the table
-above (`d = 14`), so the local search resumes at `184`, where `d = 15` is the
-open target and the listed set uses one more element. From `N = 196` the table
-uses 17 elements, except where a 17-element set was not found and 18 are used
-instead: `219`, and everything from `221` up. Neither `d = 15` nor `d = 16` is
-proved impossible anywhere in this range.
+`241`. `N = 183` is the Singer optimum of the table above (`d = 14`), so the
+local search resumes at `184`, where `d = 15` is the open target and the listed
+set uses one more element. From `N = 196` the table uses 17 elements, except
+where a 17-element set was not found and 18 are used instead: `219`, and
+everything from `221` up. Neither `d = 15` nor `d = 16` is proved impossible
+anywhere in this range.
 
 For `N = 176` to `182`, `d = 14` is proved impossible: by parity counting for
 `182`, and by completed exhaustive searches (`diff_cover`, fifteen threads) for
