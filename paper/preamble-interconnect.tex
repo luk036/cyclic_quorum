@@ -1,0 +1,27 @@
+% -*- coding: utf-8 -*-
+% Talk-specific preamble: the shared settings of preamble.tex plus a section
+% page that shows only the section title (pandoc's default prepends
+% "Section 1", which is redundant in a short talk).
+\usepackage{fontspec}
+\directlua{luaotfload.add_fallback("emojifb", {"Segoe UI Emoji:mode=harf"})}
+\setsansfont{Latin Modern Sans}[RawFeature={fallback=emojifb}]
+\setmainfont{Latin Modern Roman}[RawFeature={fallback=emojifb}]
+\setmonofont{Latin Modern Mono}[RawFeature={fallback=emojifb},Scale=0.86]
+
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\definecolor{nordred}{HTML}{BF616A}
+\definecolor{nordblue}{HTML}{5E81AC}
+\definecolor{nordgreen}{HTML}{A3BE8C}
+\definecolor{nordpurple}{HTML}{B48EAD}
+
+\usetheme{Frankfurt}
+\setbeamertemplate{navigation symbols}{}
+\setbeamercolor{structure}{fg=nordblue}
+\setbeamercolor{alerted text}{fg=nordred}
+
+\setbeamertemplate{section page}{%
+  \centering
+  \begin{beamercolorbox}[sep=16pt,center,rounded=true,shadow=true]{section title}
+    \usebeamerfont{section title}\insertsection\par
+  \end{beamercolorbox}}

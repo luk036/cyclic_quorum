@@ -23,20 +23,35 @@ FLAGS := -f markdown+tex_math_single_backslash \
          --metadata-file=latex.yaml
 
 TALKFLAGS := -t beamer --pdf-engine=lualatex \
-             --lua-filter=svg2pdf.lua \
-             --include-in-header=preamble.tex \
-             --metadata-file=cyclic_quorum-talk.yaml
+             --lua-filter=svg2pdf.lua
 
-.PHONY: paper talk figs clean
+.PHONY: paper talk interconnect talk-interconnect figs figs-iq clean
 
 figs:
 	python render_figs.py
 
+# matplotlib is needed only to regenerate the interconnect figures; the
+# committed SVGs let `make interconnect` run without it.
+figs-iq:
+	python make_interconnect_figs.py
+
 paper: figs
 	$(PANDOC) $(FLAGS) cyclic_quorum.md -o cyclic_quorum.pdf
 
+interconnect: figs
+	$(PANDOC) $(FLAGS) interconnect.md -o interconnect.pdf
+
 talk: figs
-	$(PANDOC) $(TALKFLAGS) cyclic_quorum-talk.md -o cyclic_quorum-talk.pdf
+	$(PANDOC) $(TALKFLAGS) --include-in-header=preamble.tex \
+	  --metadata-file=cyclic_quorum-talk.yaml \
+	  cyclic_quorum-talk.md -o cyclic_quorum-talk.pdf
+
+talk-interconnect: figs
+	$(PANDOC) $(TALKFLAGS) \
+	  --include-in-header=preamble-interconnect.tex \
+	  --metadata-file=interconnect-talk.yaml \
+	  interconnect-talk.md -o interconnect-talk.pdf
 
 clean:
-	$(RM) cyclic_quorum.pdf cyclic_quorum-talk.pdf $(wildcard fig-*.pdf)
+	$(RM) cyclic_quorum.pdf cyclic_quorum-talk.pdf interconnect.pdf \
+	  interconnect-talk.pdf $(wildcard fig-*.pdf)
