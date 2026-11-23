@@ -104,16 +104,17 @@
 
 ## Approach 2: Min-Conflicts Local Search
 
-- Start from a random complete $d$-element set; a **conflict** is an uncovered residue
+- Start from a complete $d$-element set; a **conflict** is an uncovered residue
 - The only swaps that can cover $r$ are $s \to s \pm r$, so the neighbourhood has size at most $2d$, not $O(N)$
 - Apply the least-conflicts swap, **even when it worsens** the count: that is how the search leaves local optima
-- Restart from a fresh random set after a plateau
+- A **tabu list** blocks re-inserting a value just removed for $4 + \mathrm{rand}(d)$ moves, with an **aspiration** exception when the move would set a new best
+- Start greedily (cold) or from a cover with one element too many (warm); restart after a plateau
 - Incomplete, but every reported set is verified to cover all $N-1$ non-zero residues
 
 ## Local Search in Parallel
 
 - The objective is cheap and the state is only $O(N)$ bytes, so workers never contend
-- Each worker keeps its own difference counts, candidate set and random generator
+- Each worker keeps its own difference counts, candidate set, tabu list and random generator
 - Workers share an atomic **stop flag** and one mutex for printing; the first to reach zero conflicts stops the rest
 - No locks or atomics in the hot loop: evaluating a move touches only the pairs incident to the swapped elements
 
@@ -122,14 +123,31 @@
 | $N$ | $d$ | bound |
 |----:|----:|------:|
 | 151 | **15** | 13 |
-| 152 | **15** | 13 |
 | 160 | **15** | 13 |
-| 171 | **16** | 14 |
 | 182 | **16** | 14 |
+| 196 | **17** | 15 |
+| 218 | **17** | 15 |
+| 219 | **18** | 16 |
+| 241 | **18** | 16 |
 
 - Every entry is within one or two of the bound $d(d-1)+1 \ge N$
-- The full range $N = 151$ to $182$ is tabulated in the paper
+- The full range $N = 151$ to $241$ is tabulated in the paper, in two tables
+- 15 or 16 elements up to $N = 195$, 17 from $N = 196$, 18 from $N = 219$
 - Each reported set is verified to cover all $N-1$ non-zero residues
+
+## Reach of the Local Search
+
+| $N$ | elements | how it behaves |
+|----:|---------:|:---------------|
+| 151-195 | 15-16 | cold start, minutes each |
+| 196-218 | 17 | cold start |
+| 219-241 | 18 | 241 reached; 220 still 17 |
+| 242 and up | - | nothing found |
+
+- $N = 219$: two hours cold plus seven warm repairs at 17 elements, then **two seconds** at 18
+- $N = 218$: 81 minutes and a warm start only; $N = 220$: 24 minutes from cold
+- The failures are local, not structural: 219 sits between two values that do admit 17
+- Above 241 the slack runs out: at 256, 153 pairs must cover 128 classes
 
 ## When $d = 14$ Is Impossible
 
@@ -144,13 +162,14 @@
 | 176 | exhaustive search | 20 h 38 m |
 
 - $N = 182$ is analytic: 91 pairs must cover 91 classes, and the parity split forces $2eo = 92$, hence $eo = 46$ with $e+o = 14$, which has no integer solution
-- For $176 \le N \le 181$ parity is silent, and on odd $N$ it does not even apply; the exact search decides them
-- No 14-element cover exists for $176 \le N \le 182$; $d = 15$ is open, 16 elements are the smallest known
+- For $176 \le N \le 181$ parity is silent; the exact search decides them
+- No 14-element cover exists for $176 \le N \le 182$; $d = 15$ is open
 
 ## Comparison
 
 - **Recursive search:** systematic, with explicit pruning; guaranteed within its search space
 - **Local search:** conflict repair from a complete candidate; not guaranteed, but strongest beyond the exhaustive range
+- The search is exact to $N = 150$; the local search reaches $N = 241$
 - Both exploit parallelism for speed
 - The search can certify impossibility; the local search finds solutions
 - The local search returns *a* solution, not all of them
@@ -199,13 +218,14 @@
 - Earlier work tabulates base quorums for $N = 4$ to $111$
 - The recursive search extends the optimal base quorums to $N = 150$
 - The resulting quorum size stays close to $\sqrt{N}$
-- Beyond that, the min-conflicts local search gives the best known sets for $N = 151$ to $182$
+- Beyond that, the min-conflicts local search gives the best known sets for $N = 151$ to $241$
 
 ## Optimal and Best-Known Base Quorums
 
 - Optimal base quorums for $N = 112$ to $150$ (recursive search)
-- Best known base quorums for $N = 151$ to $182$ (local search)
+- Best known base quorums for $N = 151$ to $241$ (local search)
 - $d = 14$ is impossible at $N = 181$ and $N = 182$; 16 elements are the smallest known there
+- $N = 183$ is the Singer optimum $d = 14$, so the local search resumes at 184
 - The complete tables are given in the paper
 
 ## Quorum Size vs. Lower Bound
@@ -214,14 +234,16 @@
 |----:|----:|-----------------------:|-------------------------:|
 | 112 | 12 | 11 | 1.09 |
 | 120 | 13 | 11 | 1.18 |
-| 130 | 13 | 12 | 1.08 |
-| 140 | 14 | 12 | 1.17 |
 | 150 | 14 | 13 | 1.08 |
 | 160 | 15 | 13 | 1.15 |
 | 171 | 16 | 14 | 1.14 |
 | 182 | 16 | 14 | 1.14 |
+| 200 | 17 | 15 | 1.13 |
+| 220 | 17 | 15 | 1.13 |
+| 241 | 18 | 16 | 1.13 |
 
 - $N \le 150$: optimal (recursive search); $N > 150$: best known (local search)
+- The ratio stays between 1.08 and 1.18 over the whole range
 
 # Implementation and Performance
 
@@ -239,6 +261,14 @@
 - A few hundred moves typically suffice at $N = 151$
 - Workers share nothing but an atomic stop flag, so the search scales linearly with cores
 
+## Tabu List and Starting Rules
+
+- A short tenure is fast but brittle: $N = 189$ in seven seconds, then misses $210$ and $217$
+- Tenure $4 + \mathrm{rand}(d)$ with an aspiration exception is the setting that reaches 241
+- At $N \ge 217$ a uniformly random start never reaches a cover
+- The greedy cold start does; $N = 218$ needed a warm start from an 18-element cover
+- All three rules are cheap, so try cold first and fall back to warm
+
 ## Robustness
 
 - The guard $N \le d(d-1)+1$ overflowed in 32-bit arithmetic; compute the product in 64-bit
@@ -250,7 +280,9 @@
 | Change | Effect |
 |:-------|:-------|
 | Bracelet symmetry | 1.07-1.17x, identical output |
-| Min-conflicts local search | d=15-16 at N=151-182 |
+| Min-conflicts local search | d=15-18 at N=151-241 |
+| Tabu list with aspiration | escapes plateaus; short tenure fails on hard values |
+| Greedy cold start, warm fallback | needed at N >= 217; 218 from warm only |
 | Incremental conflict counts | tens of thousands of moves per second |
 | Overflow-safe guard | no crashes |
 
@@ -260,7 +292,8 @@
 
 - Optimal CQS reduce to finding relaxed $(N,d)$-difference sets
 - A systematic recursive search is guaranteed and enumerates bracelets in CAT; optimal through $N = 150$
-- A min-conflicts local search gives the best known base quorums for $N = 151$ to $182$, one or two above the bound
+- A tabu-guided min-conflicts local search gives the best known base quorums for $N = 151$ to $241$, one or two above the bound
+- The failures near the top are local, not structural: 219 needs 18 while its neighbours admit 17
 - The two methods are complementary: parity counting and the exhaustive search prove $d=14$ impossible at $N = 182$ and $N = 181$
 - Both approaches exploit parallelism to handle the combinatorial search
 
@@ -268,6 +301,8 @@
 
 - Close the remaining gap to the bound, or certify that it cannot be closed (tightest: $N = 151$ to $157$, bound 13)
 - Decide whether $d = 15$ exists at $N = 181$ and $N = 182$
+- Decide whether 15 or 16 elements suffice anywhere in $184 \le N \le 241$
+- Push the local search past $N = 241$, where the slack is thinnest
 - Develop better pruning rules for the exhaustive search
 - Count fixed-density prenecklaces
 - Generate $k$-ary necklaces with fixed content for $k > 2$
