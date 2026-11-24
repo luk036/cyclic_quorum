@@ -209,13 +209,14 @@ bound `d(d-1)+1 >= N` gives `d >= 13` for `N <= 157`, `d >= 14` for
 `158 <= N <= 183`, and `d >= 15` for `184 <= N <= 211`, so most rows are within
 one or two of it.
 
-The table runs from `N = 151` to `241` without gaps, and nothing was found above
-`241`. `N = 183` is the Singer optimum of the table above (`d = 14`), so the
+The table runs from `N = 151` to `256` without gaps, and nothing was found above
+`256`. `N = 183` is the Singer optimum of the table above (`d = 14`), so the
 local search resumes at `184`, where `d = 15` is the open target and the listed
 set uses one more element. From `N = 196` the table uses 17 elements, except
 where a 17-element set was not found and 18 are used instead: `219`, and
-everything from `221` up. Neither `d = 15` nor `d = 16` is proved impossible
-anywhere in this range.
+everything from `221` up. From `N = 242` the sets need 18 or 19 elements, 19
+wherever the search could not close the last class. Neither `d = 15` nor
+`d = 16` is proved impossible anywhere in this range.
 
 For `N = 176` to `182`, `d = 14` is proved impossible: by parity counting for
 `182`, and by completed exhaustive searches (`diff_cover`, fifteen threads) for
@@ -314,6 +315,21 @@ below are not known to be optimal.
 239:   0  11  36  53  56  76 116 123 124 128 134 142 155 157 179 185 192 201   (LS, d=18)
 240:   0   3  28  32  33  39  44  71  78  87  95  97 110 118 132 152 167 170   (LS, d=18)
 241:   0   1   5  11  30  32  39  54  72  80 110 124 170 171 175 184 187 207   (LS, d=18)
+242:   0   1  13  17  31  36  39  63  78  88 131 133 142 162 174 209 215 222   (LS, d=18)
+243:   0   9  10  11  41  46  95 108 124 151 163 173 177 180 193 195 201 218 220   (LS, d=19)
+244:   0   3  51  61  72  84  85  89 112 115 134 144 150 152 159 191 205 211   (LS, d=18)
+245:   0   7  18  19  23  31  68  70  90 125 147 150 164 176 178 179 185 212 222   (LS, d=19)
+246:   0   4   7  33  45  76  93 109 126 133 139 141 155 166 175 176 194 199   (LS, d=18)
+247:   0   5  17  42  51  74  87  90 127 128 134 139 146 154 156 158 168 189   (LS, d=18)
+248:   0   6   7  63  81 107 117 128 130 139 149 160 176 190 191 207 210 215 219   (LS, d=19)
+249:   0  48  63  89 113 121 129 140 141 146 161 163 190 193 200 231 235 236 245   (LS, d=19)
+250:   0   3  14  23  29  33  50  77  78 110 112 118 125 134 171 176 183 201 214   (LS, d=19)
+251:   0   8  31  44  47  53  57  58  68 109 110 143 150 175 184 204 221 223 239   (LS, d=19)
+252:   0   1   3  11  20  32  70  84 104 109 115 137 161 174 197 201 204 211 237   (LS, d=19)
+253:   0  34  35  52  74  77  84 100 103 105 111 115 141 155 157 193 202 213 226   (LS, d=19)
+254:   0   4  10  13  17  24  38  50  63  65  73  94  95 137 142 145 161 178 196   (LS, d=19)
+255:   0   8  23  37  79  80 102 109 113 131 133 174 179 181 191 200 206 216 219   (LS, d=19)
+256:   0   4   6  17  33  51  55  57  60 101 102 111 122 150 164 222 225 230 237   (LS, d=19)
 ```
 
 `N = 196` and above use 17 elements because no 16-element set was found there:
@@ -342,6 +358,12 @@ three fall in seconds to minutes (`219` in 2 s, `221` in 24 s, `222` in 2 s).
 The `d = 18` block is complete through `241`. Getting there needed the long
 horizon on the last five interior gaps: `234` in 10 min, `235` in 57 min, `236`
 in 11 min, `238` in 51 min and `240` in 17 min, all from a cold greedy start
-without any warm-start help. Beyond `241` the spare capacity runs out again:
-`242` to `245` produced nothing, and at `N = 256` the search stalls 12 classes
-short, with 153 pairs for 128 classes.
+without any warm-start help.
+
+Beyond `241` the same wall reappears, one element higher and unpatchily. `242`
+took 27 min cold and `246` and `247` about 4 min and 1 min, but `243` and `245`
+resisted two rounds of two hours plus warm repairs, and `244` fell only on a
+third warm seed after six hours of wall clock. `248` to `256` gave nothing at 18
+elements and are listed at 19, where the difficulty is uneven again: `243`,
+`245`, `248` and `250` fall in seconds while `256` needed 52 minutes. At
+`N = 256`, 171 pairs cover 128 classes.
