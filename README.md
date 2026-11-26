@@ -360,10 +360,14 @@ horizon on the last five interior gaps: `234` in 10 min, `235` in 57 min, `236`
 in 11 min, `238` in 51 min and `240` in 17 min, all from a cold greedy start
 without any warm-start help.
 
-Beyond `241` the same wall reappears, one element higher and unpatchily. `242`
-took 27 min cold and `246` and `247` about 4 min and 1 min, but `243` and `245`
-resisted two rounds of two hours plus warm repairs, and `244` fell only on a
-third warm seed after six hours of wall clock. `248` to `256` gave nothing at 18
-elements and are listed at 19, where the difficulty is uneven again: `243`,
-`245`, `248` and `250` fall in seconds while `256` needed 52 minutes. At
-`N = 256`, 171 pairs cover 128 classes.
+Beyond `241` the same wall reappears, one element higher and patchily. `242`
+took 27 min cold, `246` and `247` about 4 min and 1 min, and `244` fell only on a
+third warm seed after six hours of wall clock; `243` and `245` resisted every
+attempt. `248` to `256` gave nothing at 18 elements either and are listed at 19,
+where the difficulty is uneven again: `243`, `245`, `248` and `250` fall in
+seconds while `256` needed 52 minutes. At `N = 256`, 171 pairs cover 128 classes.
+
+Starting from the 19-element cover and dropping one element shows that this is a
+near-miss regime rather than a shortage of search: `243` and `249` end two
+classes uncovered, `245`, `248`, `251` and `252` four, `250` five, `253` to `255`
+six and `256` eight. None of this proves that 18 elements are impossible.
