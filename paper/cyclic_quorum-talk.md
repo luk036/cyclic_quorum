@@ -123,17 +123,18 @@
 | $N$ | $d$ | bound |
 |----:|----:|------:|
 | 151 | **15** | 13 |
-| 160 | **15** | 13 |
 | 182 | **16** | 14 |
 | 196 | **17** | 15 |
 | 218 | **17** | 15 |
 | 219 | **18** | 16 |
 | 241 | **18** | 16 |
+| 242 | **18** | 16 |
+| 256 | **19** | 16 |
 
 - Every entry is within one or two of the bound $d(d-1)+1 \ge N$
-- The full range $N = 151$ to $241$ is tabulated in the paper, in two tables
-- 15 or 16 elements up to $N = 195$, 17 from $N = 196$, 18 from $N = 219$
-- Each reported set is verified to cover all $N-1$ non-zero residues
+- The full range $N = 151$ to $256$ is tabulated in the paper, in three tables
+- 15-16 elements to $N = 195$, 17 from $N = 196$, 18-19 from $N = 219$
+- Every reported set is verified to cover all $N-1$ non-zero residues
 
 ## Reach of the Local Search
 
@@ -142,12 +143,13 @@
 | 151-195 | 15-16 | cold start, minutes each |
 | 196-218 | 17 | cold start |
 | 219-241 | 18 | 241 reached; 220 still 17 |
-| 242 and up | - | nothing found |
+| 242-247 | 18 or 19 | 242, 244, 246, 247 at 18 |
+| 248-256 | 19 | nothing at 18 |
 
 - $N = 219$: two hours cold plus seven warm repairs at 17 elements, then **two seconds** at 18
-- $N = 218$: 81 minutes and a warm start only; $N = 220$: 24 minutes from cold
-- The failures are local, not structural: 219 sits between two values that do admit 17
-- Above 241 the slack runs out: at 256, 153 pairs must cover 128 classes
+- $N = 243$ and $N = 245$: six warm restarts each at 18 elements, ending two and four classes short
+- The failures are local, not structural: 219 sits between two values that admit 17
+- At 256, 171 pairs cover 128 classes, and 18 elements stall eight classes short
 
 ## When $d = 14$ Is Impossible
 
@@ -169,7 +171,7 @@
 
 - **Recursive search:** systematic, with explicit pruning; guaranteed within its search space
 - **Local search:** conflict repair from a complete candidate; not guaranteed, but strongest beyond the exhaustive range
-- The search is exact to $N = 150$; the local search reaches $N = 241$
+- The search is exact to $N = 150$; the local search reaches $N = 256$
 - Both exploit parallelism for speed
 - The search can certify impossibility; the local search finds solutions
 - The local search returns *a* solution, not all of them
@@ -218,12 +220,12 @@
 - Earlier work tabulates base quorums for $N = 4$ to $111$
 - The recursive search extends the optimal base quorums to $N = 150$
 - The resulting quorum size stays close to $\sqrt{N}$
-- Beyond that, the min-conflicts local search gives the best known sets for $N = 151$ to $241$
+- Beyond that, the min-conflicts local search gives the best known sets for $N = 151$ to $256$
 
 ## Optimal and Best-Known Base Quorums
 
 - Optimal base quorums for $N = 112$ to $150$ (recursive search)
-- Best known base quorums for $N = 151$ to $241$ (local search)
+- Best known base quorums for $N = 151$ to $256$ (local search)
 - $d = 14$ is impossible at $N = 181$ and $N = 182$; 16 elements are the smallest known there
 - $N = 183$ is the Singer optimum $d = 14$, so the local search resumes at 184
 - The complete tables are given in the paper
@@ -235,15 +237,14 @@
 | 112 | 12 | 11 | 1.09 |
 | 120 | 13 | 11 | 1.18 |
 | 150 | 14 | 13 | 1.08 |
-| 160 | 15 | 13 | 1.15 |
 | 171 | 16 | 14 | 1.14 |
 | 182 | 16 | 14 | 1.14 |
-| 200 | 17 | 15 | 1.13 |
 | 220 | 17 | 15 | 1.13 |
 | 241 | 18 | 16 | 1.13 |
+| 256 | 19 | 16 | 1.19 |
 
 - $N \le 150$: optimal (recursive search); $N > 150$: best known (local search)
-- The ratio stays between 1.08 and 1.18 over the whole range
+- The ratio stays between 1.08 and 1.19 over the whole range
 
 # Implementation and Performance
 
@@ -264,7 +265,7 @@
 ## Tabu List and Starting Rules
 
 - A short tenure is fast but brittle: $N = 189$ in seven seconds, then misses $210$ and $217$
-- Tenure $4 + \mathrm{rand}(d)$ with an aspiration exception is the setting that reaches 241
+- Tenure $4 + \mathrm{rand}(d)$ with an aspiration exception is the setting that reaches 256
 - At $N \ge 217$ a uniformly random start never reaches a cover
 - The greedy cold start does; $N = 218$ needed a warm start from an 18-element cover
 - All three rules are cheap, so try cold first and fall back to warm
@@ -280,7 +281,7 @@
 | Change | Effect |
 |:-------|:-------|
 | Bracelet symmetry | 1.07-1.17x, identical output |
-| Min-conflicts local search | d=15-18 at N=151-241 |
+| Min-conflicts local search | d=15-19 at N=151-256 |
 | Tabu list with aspiration | escapes plateaus; short tenure fails on hard values |
 | Greedy cold start, warm fallback | needed at N >= 217; 218 from warm only |
 | Incremental conflict counts | tens of thousands of moves per second |
@@ -292,7 +293,7 @@
 
 - Optimal CQS reduce to finding relaxed $(N,d)$-difference sets
 - A systematic recursive search is guaranteed and enumerates bracelets in CAT; optimal through $N = 150$
-- A tabu-guided min-conflicts local search gives the best known base quorums for $N = 151$ to $241$, one or two above the bound
+- A tabu-guided min-conflicts local search gives the best known base quorums for $N = 151$ to $256$, one or two above the bound
 - The failures near the top are local, not structural: 219 needs 18 while its neighbours admit 17
 - The two methods are complementary: parity counting and the exhaustive search prove $d=14$ impossible at $N = 182$ and $N = 181$
 - Both approaches exploit parallelism to handle the combinatorial search
@@ -301,8 +302,8 @@
 
 - Close the remaining gap to the bound, or certify that it cannot be closed (tightest: $N = 151$ to $157$, bound 13)
 - Decide whether $d = 15$ exists at $N = 181$ and $N = 182$
-- Decide whether 15 or 16 elements suffice anywhere in $184 \le N \le 241$
-- Push the local search past $N = 241$, where the slack is thinnest
+- Decide whether 15 or 16 elements suffice anywhere in $184 \le N \le 256$
+- Close the two-class gaps at $N = 243$ and $N = 249$, and push past $N = 256$
 - Develop better pruning rules for the exhaustive search
 - Count fixed-density prenecklaces
 - Generate $k$-ary necklaces with fixed content for $k > 2$
